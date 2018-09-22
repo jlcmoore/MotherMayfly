@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 
 # Main script for Adafruit Internet of Things Printer 2.  Monitors switch
 # for taps and holds, performs periodic actions (Twitter polling by default)
@@ -19,6 +19,7 @@ import RPi.GPIO as GPIO
 import subprocess, time, socket
 from PIL import Image
 from Adafruit_Thermal import *
+import sys
 
 # ledPin       = 18
 switchPin    = 4
@@ -32,16 +33,19 @@ printer      = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
 
 # Called when switch is briefly tapped.  Invokes time/temperature script.
 def tap():
+  print("tap")
   subprocess.call(["python", "tap.py"])
 
 # Called when switch is held down.  Prints image, invokes shutdown process.
 def hold():
+  print("hold")
   subprocess.call("sync")
   subprocess.call("poweroff")
 
 # Called at periodic intervals (30 seconds by default).
 # Invokes twitter script.
 def interval():
+  print("interval")
   p = subprocess.Popen(["python", "interval.py", str(lastId)],
     stdout=subprocess.PIPE)
   return p.communicate()[0] # Script pipes back lastId, returned to main
@@ -50,6 +54,7 @@ def interval():
 # Called once per day (6:30am by default).
 # Invokes weather forecast and sudoku-gfx scripts.
 def daily():
+  print("daily")
   subprocess.call(["python", "daily.py"])
 
 # Initialization
@@ -62,7 +67,7 @@ GPIO.setup(switchPin, GPIO.IN)
 
 # Processor load is heavy at startup; wait a moment to avoid
 # stalling during greeting.
-#time.sleep(30)
+time.sleep(30)
 
 # Show IP address (if network is available)
 try:
@@ -80,8 +85,9 @@ except:
 	exit(0)
 
 # Print greeting image
-printer.printImage(Image.open('gfx/hello.png'), True)
-printer.feed(3)
+print("started up")
+#printer.printImage(Image.open('gfx/hello.png'), True)
+#printer.feed(3)
 
 # Poll initial switch state and time
 prevSwitchState = GPIO.input(switchPin)
@@ -106,7 +112,7 @@ while(True):
       hold()
     elif numSwitches == 2:
       pass
-    elif numSwitches >= 1:
+    elif numSwitches == 1:
       tap()
     numSwitches = 0
     prevTime = t
