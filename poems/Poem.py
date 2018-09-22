@@ -3,6 +3,7 @@ import random
 
 class Poem:
     # todo: add a date should not be required
+    # and add a typ
     def __init__(self, title, lines, author):
         self.title = title
         self.lines = lines
