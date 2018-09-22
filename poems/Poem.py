@@ -1,4 +1,4 @@
-from poems import test_poems
+from poems import *
 import random
 
 class Poem:
@@ -22,8 +22,8 @@ def serial_to_poem(serial):
     return Poem(title, lines, author)
     
 def get_poem():
-#    return serial_to_poem(random.choice(test_poems))
-    return serial_to_poem(test_poems[7])
+    return serial_to_poem(random.choice(real_tests))
+#    return serial_to_poem(test_poems[7])
     
 def generate():
     return get_poem()
