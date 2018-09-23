@@ -8,7 +8,7 @@
 # http://www.adafruit.com/products/600 Printer starter pack
 
 from Adafruit_Thermal import *
-from poem import Poem
+from poems import Poem
 
 printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
 
