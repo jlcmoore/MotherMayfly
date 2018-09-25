@@ -201,7 +201,6 @@ class Adafruit_Thermal(Serial):
                                         self.timeoutWait()
                                         d = self.byteTime
                                         if self.column == self.maxColumn:
-                                                print("max column")
                                                 super(Adafruit_Thermal, self).write('\n')
                                                 self.column = 0
                                                 # Feed line (blank)
@@ -216,9 +215,7 @@ class Adafruit_Thermal(Serial):
 						              (self.lineSpacing *
 						               self.dotFeedTime))
                                                 if self.tabWrap:
-                                                        print("tab wrap")
                                                         self.tab()
-                                        print(c + " column " + str(self.column))
 			                super(Adafruit_Thermal, self).write(c)
                                         if c == '\n':
                                                 self.column = 0
