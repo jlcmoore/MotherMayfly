@@ -110,10 +110,10 @@ def parse_message(mssg, gmail):
 	# Fetching message body
 	body = payload['body']
 
-	if not body:
+	if not body or 'data' not in body:
 		return None
 	body_data = body['data']
-	
+
 	msg_dict = extract_headers(header)
 	msg_dict['Snippet'] = message['snippet'] # fetching message snippet
 
