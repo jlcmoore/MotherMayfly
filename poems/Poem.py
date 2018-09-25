@@ -1,5 +1,6 @@
 from poems import *
 import random
+import query_hafez
 
 class Poem:
     # todo: add a date should not be required
@@ -25,5 +26,6 @@ def get_poem():
     return serial_to_poem(random.choice(real_tests))
 #    return serial_to_poem(test_poems[7])
     
-def generate():
-    return get_poem()
+def generate(topic):
+    # this is very blocking
+    return Poem(topic, query_hafez.query(topic), "computer")
