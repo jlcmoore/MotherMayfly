@@ -107,11 +107,16 @@ def parse_message(mssg, gmail):
 	payload = message['payload']
 	header = payload['headers']
 
+	# Fetching message body
+	body = payload['body']
+
+	if not body:
+		return None
+	body_data = body['data']
+	
 	msg_dict = extract_headers(header)
 	msg_dict['Snippet'] = message['snippet'] # fetching message snippet
 
-	# Fetching message body
-	body_data = payload['body']['data']
 	# decoding from Base64 to UTF-8
 	#clean_one = body_data.replace("-","+")
 	#clean_one = clean_one.replace("_","/")
