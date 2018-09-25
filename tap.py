@@ -9,10 +9,10 @@
 
 from Adafruit_Thermal import *
 from poem import Poem
+import sys
+from util import TOPICS
 
-printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
-
-def print_poem(title, lines, author):
+def print_poem(printer, title, lines, author):
     printer.underlineOn()
     printer.setSize('M')
     printer.println(title)
@@ -27,8 +27,23 @@ def print_poem(title, lines, author):
 
     printer.println(author)
 
-poem = Poem.generate()
-print_poem(poem.title, poem.lines, poem.author)
+def read_last_topic():
+    with open(TOPICS, "r") as f:
+        data = f.read()
+        last_line = data.readlines()[-1]
+        return last_line
 
-printer.feed(3)
-printer.setDefault()
+def main():
+    printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
+
+    topic = read_last_topic()
+    # this is very blocking, deal with
+
+    poem = Poem.generate(topic)
+    print_poem(printer, poem.title, poem.lines, poem.author)
+
+    printer.feed(3)
+    printer.setDefault()
+
+if __name__ == '__main__':
+    main()

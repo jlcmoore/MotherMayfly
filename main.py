@@ -14,6 +14,9 @@
 # http://www.adafruit.com/products/597 Mini Thermal Receipt Printer
 # http://www.adafruit.com/products/600 Printer starter pack
 
+
+#TODO: the printer is really a shared resource and needs to be locked 
+
 from __future__ import print_function
 import RPi.GPIO as GPIO
 import subprocess, time, socket
@@ -22,6 +25,7 @@ from Adafruit_Thermal import *
 import sys
 
 # ledPin       = 18
+
 switchPin    = 4
 holdTime     = 1     # Duration (s) for shutdown
 offSwitches    = 3     # Number of swtiches in holdTime to trigger off
@@ -29,7 +33,6 @@ nextInterval = 0.0   # Time of next recurring operation
 dailyFlag    = False # Set after daily trigger occurs
 lastId       = '1'   # State information passed to/from interval script
 printer      = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
-
 
 # Called when switch is briefly tapped.  Invokes time/temperature script.
 def tap():
@@ -48,8 +51,8 @@ def interval():
   print("interval")
   p = subprocess.Popen(["python", "interval.py", str(lastId)],
     stdout=subprocess.PIPE)
-  return p.communicate()[0] # Script pipes back lastId, returned to main
 
+  return p.communicate()[0] # Script pipes back lastId, returned to main
 
 # Called once per day (6:30am by default).
 # Invokes weather forecast and sudoku-gfx scripts.
