@@ -2,5 +2,11 @@
 *~
 *.pyc
 logs/
+
+# gmail api needs
 credentials.json
+storage.json
+token.json
+
+# virtual env
 env/
