@@ -8,9 +8,9 @@
 # http://www.adafruit.com/products/600 Printer starter pack
 
 from Adafruit_Thermal import *
-from poem import Poem
 import sys
 from util import TOPICS
+from poems import Poem
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
