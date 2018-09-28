@@ -26,7 +26,7 @@ import sys
 
 # ledPin       = 18
 
-switchPin    = 4
+switchPin    = 24
 holdTime     = 1     # Duration (s) for shutdown
 offSwitches    = 3     # Number of swtiches in holdTime to trigger off
 nextInterval = 0.0   # Time of next recurring operation
