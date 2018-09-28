@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -u
 
 # Required software includes Adafruit_Thermal, Python Imaging and PySerial
 # libraries. Other libraries used are part of stock Python install.
@@ -9,12 +9,12 @@
 
 from Adafruit_Thermal import *
 import sys
-from util import TOPICS, TIME_FORMAT
+from util import TOPICS, TIME_FORMAT, DEFAULT_TOPICS
 from poems import Poem
 import random
 from datetime import datetime, timedelta
 
-DEFAULT_TOPICS = ['yellow', 'nails', 'apple', 'rain', 'laugh']
+
 TOPIC_LIFE = 3
 
 def print_poem(printer, title, lines, author):
