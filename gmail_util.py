@@ -99,7 +99,14 @@ def get_msg(gmail, id):
 	return gmail.users().messages().get(userId=USER_ID, id=id).execute() 
 
 def read_msg(gmail, id):
-	gmail.users().messages().modify(userId=USER_ID, id=id,body={ 'removeLabelIds': ['UNREAD']}).execute() 
+	gmail.users().messages().modify(userId=USER_ID, id=id,body={ 'removeLabelIds': ['UNREAD']}).execute()
+
+def decode(string):
+        # decoding from Base64 to UTF-8
+	string = string.replace("-","+")
+	string = string.replace("_","/")
+	decoded = base64.b64decode(bytes(string), 'UTF-8')
+        return decoded
 
 def parse_message(mssg, gmail):
 	# fetch the message using API
@@ -109,18 +116,18 @@ def parse_message(mssg, gmail):
 
 	# Fetching message body
 	body = payload['body']
-
 	if not body or 'data' not in body:
-		return None
+                parts = payload['parts']
+                if parts and len(parts) > 0 and 'body' in parts[0]:
+                        body = parts[0]['body']
+		else:
+                        return None
 	body_data = body['data']
 
 	msg_dict = extract_headers(header)
 	msg_dict['Snippet'] = message['snippet'] # fetching message snippet
 
-	# decoding from Base64 to UTF-8
-	body_data = body_data.replace("-","+")
-	body_data = body_data.replace("_","/")
-	decoded_body = base64.b64decode(bytes(body_data), 'UTF-8')
+	decoded_body = decode(body_data)
 
 	msg_dict['Message_body'] = decoded_body
 
