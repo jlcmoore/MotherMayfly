@@ -1,11 +1,13 @@
 import gmail_util
-from util import TOPICS
+from util import TOPICS, TIME_FORMAT
 from Adafruit_Thermal import *
-
+from datetime import datetime
 
 def write_new_topic(topic):
 	with open(TOPICS, "a") as f:
-		f.write(topic + "\n")
+                t = datetime.now()
+                time_string = t.strftime(TIME_FORMAT)
+		f.write(time_string + "\t" + topic + "\n")
 
 def print_message(printer, body, author):
     printer.setSize('M')

@@ -9,11 +9,13 @@
 
 from Adafruit_Thermal import *
 import sys
-from util import TOPICS
+from util import TOPICS, TIME_FORMAT
 from poems import Poem
 import random
+from datetime import datetime, timedelta
 
 DEFAULT_TOPICS = ['yellow', 'nails', 'apple', 'rain', 'laugh']
+TOPIC_LIFE = 3
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
@@ -34,7 +36,10 @@ def read_last_topic():
     with open(TOPICS, "r") as f:
         lines = f.readlines()
         if lines and len(lines) > 0:
-            return lines[-1]
+            datestr, topic = lines[-1].rstrip().split("\t")
+            prev = datetime.strptime(datestr, TIME_FORMAT)
+            if datetime.now() - prev < timedelta(minutes=TOPIC_LIFE):
+                return topic
         return random.choice(DEFAULT_TOPICS)
 
 def main():
