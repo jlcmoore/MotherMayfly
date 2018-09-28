@@ -11,6 +11,9 @@ from Adafruit_Thermal import *
 import sys
 from util import TOPICS
 from poems import Poem
+import random
+
+DEFAULT_TOPICS = ['yellow', 'nails', 'apple', 'rain', 'laugh']
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
@@ -29,9 +32,10 @@ def print_poem(printer, title, lines, author):
 
 def read_last_topic():
     with open(TOPICS, "r") as f:
-        data = f.read()
-        last_line = data.readlines()[-1]
-        return last_line
+        lines = f.readlines()
+        if lines and len(lines) > 0:
+            return lines[-1]
+        return random.choice(DEFAULT_TOPICS)
 
 def main():
     printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
