@@ -7,17 +7,16 @@
 # http://www.adafruit.com/products/597 Mini Thermal Receipt Printer
 # http://www.adafruit.com/products/600 Printer starter pack
 
-from Adafruit_Thermal import *
-import sys
-from util import TOPICS, TIME_FORMAT, DEFAULT_TOPICS
-from poems import Poem
-import random
 from datetime import datetime, timedelta
+import random
 import threading
+
+from poems import Poem
+from util import TOPICS, TIME_FORMAT, DEFAULT_TOPICS
 
 TOPIC_LIFE = 3
 
-class TapThread (threading.Thread):
+class TapThread(threading.Thread):
     def __init__(self, printer, printer_lock):
         threading.Thread.__init__(self)
         self.printer = printer
@@ -31,12 +30,12 @@ class TapThread (threading.Thread):
         # this is very blocking, deal with
         poem = Poem.generate(topic)
 
-        printer_lock.acquire()
-        print_poem(printer, poem.title, poem.lines, poem.author)
+        self.printer_lock.acquire()
+        print_poem(self.printer, poem.title, poem.lines, poem.author)
 
-        printer.feed(3)
-        printer.setDefault()
-        printer_lock.release()
+        self.printer.feed(3)
+        self.printer.setDefault()
+        self.printer_lock.release()
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
@@ -54,9 +53,9 @@ def print_poem(printer, title, lines, author):
     printer.println(author)
 
 def read_last_topic():
-    with open(TOPICS, "r") as f:
-        lines = f.readlines()
-        if lines and len(lines) > 0:
+    with open(TOPICS, "r") as topics:
+        lines = topics.readlines()
+        if lines:
             datestr, topic = lines[-1].rstrip().split("\t")
             prev = datetime.strptime(datestr, TIME_FORMAT)
             if datetime.now() - prev < timedelta(minutes=TOPIC_LIFE):

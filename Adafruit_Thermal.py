@@ -193,37 +193,38 @@ class Adafruit_Thermal(Serial):
     def write(self, *data):
         for i in range(len(data)):
             word = data[i]
-                        for c in word:
-                                if self.writeToStdout:
-                        sys.stdout.write(c)
-                        continue
-                    if c != 0x13:
-                                        self.timeoutWait()
-                                        d = self.byteTime
-                                        if self.column == self.maxColumn:
-                                                super(Adafruit_Thermal, self).write('\n')
-                                                self.column = 0
-                                                # Feed line (blank)
-                                                if self.prevByte == '\n':
-                                                        d += ((self.charHeight +
+            for c in word:
+                if self.writeToStdout:
+                    sys.stdout.write(c)
+                    continue
+                if c != 0x13:
+                    self.timeoutWait()
+                    d = self.byteTime
+                    if self.column == self.maxColumn:
+                            super(Adafruit_Thermal, self).write('\n')
+                            self.column = 0
+                            # Feed line (blank)
+                            if self.prevByte == '\n':
+                                d += ((self.charHeight +
                                        self.lineSpacing) *
-                                      self.dotFeedTime)
+                                       self.dotFeedTime)
                             else:
                                 # Text line
                                 d += ((self.charHeight *
                                        self.dotPrintTime) +
                                       (self.lineSpacing *
                                        self.dotFeedTime))
-                                                if self.tabWrap:
-                                                        self.tab()
-                            super(Adafruit_Thermal, self).write(c)
-                                        if c == '\n':
-                                                self.column = 0
-                                        else:
-                            self.column += 1
-                                        
-                        self.timeoutSet(d)
-                        self.prevByte = c
+                            if self.tabWrap:
+                                self.tab()
+                        
+                    super(Adafruit_Thermal, self).write(c)
+                    if c == '\n':
+                        self.column = 0
+                    else:
+                        self.column += 1
+                                    
+                    self.timeoutSet(d)
+                    self.prevByte = c
 
     # The bulk of this method was moved into __init__,
     # but this is left here for compatibility with older
@@ -258,7 +259,7 @@ class Adafruit_Thermal(Serial):
         self.doubleHeightOff()
         self.setLineHeight(30)
         self.boldOff()
-                self.tabwrapOff()
+        self.tabwrapOff()
         self.underlineOff()
         self.setBarcodeHeight(50)
         self.setSize('s')
@@ -399,7 +400,7 @@ class Adafruit_Thermal(Serial):
 
     def normal(self):
         self.printMode = 0
-                self.tabwrapOff()
+        self.tabwrapOff()
         self.writePrintMode()
 
     def inverseOn(self):

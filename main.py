@@ -15,117 +15,117 @@
 # http://www.adafruit.com/products/600 Printer starter pack
 
 
-#TODO: the printer is really a shared resource and needs to be locked 
+#TODO: the printer is really a shared resource and needs to be locked
 
 from __future__ import print_function
-import RPi.GPIO as GPIO
-import subprocess, time, socket
-from PIL import Image
-from Adafruit_Thermal import *
-import sys
+import socket
+import subprocess
+import time
 import threading
-import tap
+
+from Adafruit_Thermal import Adafruit_Thermal
+from PIL import Image
+import RPi.GPIO as GPIO
+
+from GracefulKiller import GracefulKiller
 import interval
-import util
+import tap
 
 # ledPin       = 18
-SWITCH_PIN    = 24
-HOLD_TIME     = 1     # Duration (s) for shutdown
-OFF_SWITCHES    = 3     # Number of swtiches in HOLD_TIME to trigger off
+SWITCH_PIN = 24
+HOLD_TIME = 1     # Duration (s) for shutdown
+OFF_SWITCHES = 3     # Number of swtiches in HOLD_TIME to trigger off
 
-class MainThread (threading.Thread):
-    
+class MainThread(threading.Thread):
+
     def __init__(self):
-            threading.Thread.__init__(self)
+        threading.Thread.__init__(self)
 
-            self.nextInterval = 0.0   # Time of next recurring operation
-            self.dailyFlag    = False # Set after daily trigger occurs
-            self.lastId       = '1'   # State information passed to/from interval script
-            self.printer      = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
-            self.printer_lock = threading.Lock()
-            self.dead = threading.Event()
-            self.killer = util.GracefulKiller(dead)
-            # Initialization
+        self.next_interval = 0.0   # Time of next recurring operation
+        self.daily_flag = False # Set after daily trigger occurs
+        self.printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
+        self.printer_lock = threading.Lock()
+        self.dead = threading.Event()
+        self.killer = GracefulKiller(self.dead)
+        # Initialization
 
-            # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
-            GPIO.setmode(GPIO.BCM)
+        # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
+        GPIO.setmode(GPIO.BCM)
 
-            # Enable swithc (physical pull-up)
-            GPIO.setup(SWITCH_PIN, GPIO.IN) 
+        # Enable swithc (physical pull-up)
+        GPIO.setup(SWITCH_PIN, GPIO.IN)
 
-            # Processor load is heavy at startup; wait a moment to avoid
-            # stalling during greeting.
-            time.sleep(30)
+        # Processor load is heavy at startup; wait a moment to avoid
+        # stalling during greeting.
+        time.sleep(30)
 
-            # Show IP address (if network is available)
-            try:
-                printer_lock.acquire()
-                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                s.connect(('8.8.8.8', 0))
-                self.printer.print('My IP address is ' + s.getsockname()[0])
-                self.printer.feed(3)
-            except:
-                self.printer.boldOn()
-                self.printer.println('Network is unreachable.')
-                self.printer.boldOff()
-                self.printer.print('Connect display and keyboard\n'
-                    'for network troubleshooting.')
-                self.printer.feed(3)
-                exit(0)
-            finally:
-                printer_lock.relase()
+        # Show IP address (if network is available)
+        try:
+            self.printer_lock.acquire()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.connect(('8.8.8.8', 0))
+            self.printer.print('My IP address is ' + sock.getsockname()[0])
+            self.printer.feed(3)
+        except:
+            self.printer.boldOn()
+            self.printer.println('Network is unreachable.')
+            self.printer.boldOff()
+            self.printer.print('Connect display and keyboard\n'
+                               'for network troubleshooting.')
+            self.printer.feed(3)
+            exit(0)
+        finally:
+            self.printer_lock.release()
 
-            # Print greeting image
-            print("started up")
-    
+        # Print greeting image
+        print("started up")
+
     def run(self):
         print("Starting Main Thread")
         # Poll initial switch state and time
-        prevSwitchState = GPIO.input(SWITCH_PIN)
-        prevTime        = time.time()
-        numSwitches     = 0    # number of times switch is changed in HOLD_TIME
+        prev_switch_state = GPIO.input(SWITCH_PIN)
+        prev_time = time.time()
+        num_switches = 0    # number of times switch is changed in HOLD_TIME
 
         # Main loop
-        while(not self.dead.is_set()):
+        while not self.dead.is_set():
 
             # Poll current switch state and time
-            switchState = GPIO.input(SWITCH_PIN)
-            t           = time.time()
+            switch_state = GPIO.input(SWITCH_PIN)
+            now = time.time()
 
-            if switchState != prevSwitchState:
-                prevSwitchState = switchState
-                if numSwitches == 0:
-                    prevTime = t
-                numSwitches = numSwitches + 1
+            if switch_state != prev_switch_state:
+                prev_switch_state = switch_state
+                if num_switches == 0:
+                    prev_time = now
+                num_switches = num_switches + 1
 
-            if (t - prevTime) >= HOLD_TIME:
-                if numSwitches >= 3:
+            if (now - prev_time) >= HOLD_TIME:
+                if num_switches >= 3:
                     self.off()
-                elif numSwitches == 2:
+                elif num_switches == 2:
                     pass
-                elif numSwitches == 1:
+                elif num_switches == 1:
                     self.tap()
-                numSwitches = 0
-                prevTime = t
+                num_switches = 0
+                prev_time = now
             time.sleep(.01) # to debounce
 
             # Once per day (currently set for 6:30am local time, or when script
             # is first run, if after 6:30am), run daily scripts.
-            l = time.localtime()
-            if (60 * l.tm_hour + l.tm_min) > (60 * 6 + 30):
-                if self.dailyFlag == False:
-                    daily()
-                    self.dailyFlag = True
+            local = time.localtime()
+            if ((60 * local.tm_hour + local.tm_min) > (60 * 6 + 30) and
+                    not self.daily_flag):
+                self.daily()
+                self.daily_flag = True
             else:
-                self.dailyFlag = False  # Reset daily trigger
+                self.daily_flag = False  # Reset daily trigger
 
-            # Every 30 seconds, run interval scripts.  'lastId' is passed around
-            # to preserve state between invocations.  Probably simpler to do an
-            # import thing.
-            if t > self.nextInterval:
-                self.nextInterval = t + 30.0
-                interval()
-        
+            # Every 30 seconds, run interval scripts.
+            if now > self.next_interval:
+                self.next_interval = now + 30.0
+                self.interval()
+
         print("Ending Main Thread")
 
     # Called when switch is briefly tapped.  Invokes time/temperature script.
@@ -144,7 +144,7 @@ class MainThread (threading.Thread):
     # Called at periodic intervals (30 seconds by default).
     def interval(self):
         print("interval")
-        interval_thread = tap.IntervalThread(self.printer, self.printer_lock)
+        interval_thread = interval.IntervalThread(self.printer, self.printer_lock)
         interval_thread.start()
 
     def daily(self):

@@ -1,35 +1,26 @@
 '''
     Modified from 'Reading gmail using Python' by Abhishek Chhibber
-'''
 
-'''
 This script does the following:
 - Go to Gmal inbox
 - Find and read all the unread messages
 - Extract details (Date, Sender, Subject, Snippet, Body) and export them to a .csv file / DB
-- Mark the messages as Read - so that they are not read again 
-'''
+- Mark the messages as Read - so that they are not read again
 
-'''
-Before running this script, the user should get the authentication by following 
+Before running this script, the user should get the authentication by following
 the link: https://developers.google.com/gmail/api/quickstart/python
 Also, credentials.json should be saved in the same directory as this file
 '''
+import base64
 
 from apiclient import discovery
-from apiclient import errors
 from httplib2 import Http
-from oauth2client import file, client, tools
-import base64
-import re
-import time
-from datetime import datetime
-import datetime
+import oauth2client
 
 USER_ID =  'me'
 # Using modify and not readonly, because this will mark the messages Read
 SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
-CREDENTIALS = 'credentials.json' 
+CREDENTIALS = 'credentials.json'
 STORAGE = 'storage.json'
 
 def get_new_messages():
@@ -37,16 +28,15 @@ def get_new_messages():
     unread_msgs = get_unread_msgs_raw(gmail)
     if unread_msgs:
         return parse_messages(unread_msgs, gmail)
-    else:
-        return None
+    return None
 
 def auth_gmail():
     # Creating a storage.JSON file with authentication details
-    store = file.Storage(STORAGE) 
+    store = oauth2client.file.Storage(STORAGE)
     creds = store.get()
     if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets(CREDENTIALS, SCOPES)
-        creds = tools.run_flow(flow, store)
+        flow = oauth2client.client.flow_from_clientsecrets(CREDENTIALS, SCOPES)
+        creds = oauth2client.tools.run_flow(flow, store)
     return discovery.build('gmail', 'v1', http=creds.authorize(Http()))
 
 def get_unread_msgs_raw(gmail):
@@ -55,7 +45,9 @@ def get_unread_msgs_raw(gmail):
 
     # Getting all the unread messages from Inbox
     # labelIds can be changed accordingly
-    unread_msgs = gmail.users().messages().list(userId=USER_ID,labelIds=[label_id_one, label_id_two]).execute()
+    unread_msgs = gmail.users().messages().list(userId=USER_ID,
+                                                labelIds=[label_id_one,
+                                                          label_id_two]).execute()
     # unread_msgs is a dictonary
     messages = None
     num_messages = 0
@@ -69,13 +61,13 @@ def parse_messages(messages, gmail):
     '''
     The final_list will have dictionary in the following format:
 
-    {   'Sender': '"email.com" <name@email.com>', 
-        'Subject': 'Lorem ipsum dolor sit ametLorem ipsum dolor sit amet', 
-        'Date': 'yyyy-mm-dd', 
-        'Snippet': 'Lorem ipsum dolor sit amet'
+    {   'Sender': '"email.com" <name@email.com>',
+            'Subject': 'Lorem ipsum dolor sit ametLorem ipsum dolor sit amet',
+                'Date': 'yyyy-mm-dd',
+                'Snippet': 'Lorem ipsum dolor sit amet'
         'Message_body': 'Lorem ipsum dolor sit amet'}
     '''
-    parsed_messages = [ ]
+    parsed_messages = []
     for mssg in messages:
         message = parse_message(mssg, gmail)
         if message:
@@ -95,18 +87,19 @@ def extract_headers(header):
             msg_dict['Sender'] = value
     return msg_dict
 
-def get_msg(gmail, id):
-    return gmail.users().messages().get(userId=USER_ID, id=id).execute() 
+def get_msg(gmail, mid):
+    return gmail.users().messages().get(userId=USER_ID, id=mid).execute()
 
-def read_msg(gmail, id):
-    gmail.users().messages().modify(userId=USER_ID, id=id,body={ 'removeLabelIds': ['UNREAD']}).execute()
+def read_msg(gmail, mid):
+    gmail.users().messages().modify(userId=USER_ID, id=mid,
+                                    body={'removeLabelIds': ['UNREAD']}).execute()
 
 def decode(string):
         # decoding from Base64 to UTF-8
-    string = string.replace("-","+")
-    string = string.replace("_","/")
+    string = string.replace("-", "+")
+    string = string.replace("_", "/")
     decoded = base64.b64decode(bytes(string), 'UTF-8')
-        return decoded
+    return decoded
 
 def parse_message(mssg, gmail):
     # fetch the message using API
@@ -117,11 +110,11 @@ def parse_message(mssg, gmail):
     # Fetching message body
     body = payload['body']
     if not body or 'data' not in body:
-                parts = payload['parts']
-                if parts and len(parts) > 0 and 'body' in parts[0]:
-                        body = parts[0]['body']
+        parts = payload['parts']
+        if parts and 'body' in parts[0]:
+            body = parts[0]['body']
         else:
-                        return None
+            return None
     body_data = body['data']
 
     msg_dict = extract_headers(header)
@@ -132,4 +125,4 @@ def parse_message(mssg, gmail):
     msg_dict['Message_body'] = decoded_body
 
     read_msg(gmail, mssg['id'])
-    return msg_dict 
+    return msg_dict
