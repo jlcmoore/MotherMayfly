@@ -11,26 +11,26 @@ class IntervalThread (threading.Thread):
         self.printer_lock = printer_lock
 
     def run(self):
-		#TODO: this is blocking.. need to change?
-		emails = gmail_util.get_new_messages()
-		messages = []
-		if emails:
-			for email in emails:
-			  if email['Subject'].lower() == 'topic':
-			    topic = email['Message_body'].rstrip('\r\n').lower()
-			    write_new_topic(topic)
-			  if email['Subject'].lower() == 'message':
-			  	messages.append(email)
-		for message in messages:
-			self.printer_lock.acquire()
-			print_message(self.printer, message['Message_body'], message['Sender'])
-			self.printer_lock.relase()
+        #TODO: this is blocking.. need to change?
+        emails = gmail_util.get_new_messages()
+        messages = []
+        if emails:
+            for email in emails:
+              if email['Subject'].lower() == 'topic':
+                topic = email['Message_body'].rstrip('\r\n').lower()
+                write_new_topic(topic)
+              if email['Subject'].lower() == 'message':
+                messages.append(email)
+        for message in messages:
+            self.printer_lock.acquire()
+            print_message(self.printer, message['Message_body'], message['Sender'])
+            self.printer_lock.relase()
 
 def write_new_topic(topic):
-	with open(TOPICS, "a") as f:
+    with open(TOPICS, "a") as f:
                 t = datetime.now()
                 time_string = t.strftime(TIME_FORMAT)
-		f.write(time_string + "\t" + topic + "\n")
+        f.write(time_string + "\t" + topic + "\n")
 
 def print_message(printer, body, author):
     printer.setSize('M')
