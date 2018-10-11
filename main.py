@@ -115,9 +115,9 @@ class MainThread(threading.Thread):
                 if num_switches >= 3:
                     self.off()
                 elif num_switches == 2:
-                    pass
-                elif num_switches == 1:
                     self.tap()
+                elif num_switches == 1:
+                    self.tap(generate=True)
                 num_switches = 0
                 prev_time = now
             time.sleep(DEBOUNCE_TIME) # to debounce
@@ -140,10 +140,10 @@ class MainThread(threading.Thread):
         print("Ending Main Thread")
 
     # Called when switch is briefly tapped.  Invokes time/temperature script.
-    def tap(self):
-        print("tap")
-        gen_thread = tap.GeneratePoemThread(self.printer, self.printer_lock,
-                                            self.get_current_topic())
+    def tap(self, generate=False):
+        print("tap poem")
+        gen_thread = tap.PoemThread(self.printer, self.printer_lock,
+                                    self.get_current_topic(), generate)
         gen_thread.start()
 
     def get_current_topic(self):

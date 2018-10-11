@@ -11,17 +11,22 @@ import threading
 
 from poems import Poem
 
-class GeneratePoemThread(threading.Thread):
-    def __init__(self, printer, printer_lock, topic):
+class PoemThread(threading.Thread):
+    def __init__(self, printer, printer_lock, topic, generate):
         threading.Thread.__init__(self)
         self.printer = printer
         self.printer_lock = printer_lock
         self.topic = topic
+        self.generate = generate
 
     def run(self):
         print("Starting poem thread")
 
-        poem = Poem.generate(self.topic)
+        poem = None
+        if self.generate:
+            poem = Poem.generate(self.topic)
+        else:
+            poem = Poem.get_poem()
 
         self.printer_lock.acquire()
         print_poem(self.printer, poem.title, poem.lines, poem.author)
