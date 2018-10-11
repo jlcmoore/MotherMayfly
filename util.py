@@ -1,6 +1,3 @@
-TOPICS = "topics.txt"
-TIME_FORMAT = "%x %X"
-
 DEFAULT_TOPICS = [
     'corn',
     'apple butter',

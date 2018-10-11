@@ -22,19 +22,22 @@ import socket
 import subprocess
 import time
 import threading
+import Queue
+import random
 
 from Adafruit_Thermal import Adafruit_Thermal
-from PIL import Image
+# from PIL import Image #for graphics
 import RPi.GPIO as GPIO
 
 from GracefulKiller import GracefulKiller
 import interval
 import tap
+from util import DEFAULT_TOPICS
 
-# ledPin       = 18
-SWITCH_PIN = 24
 HOLD_TIME = 1     # Duration (s) for shutdown
 OFF_SWITCHES = 3     # Number of swtiches in HOLD_TIME to trigger off
+SWITCH_PIN = 24
+TOPIC_USES = 3
 
 class MainThread(threading.Thread):
 
@@ -47,6 +50,10 @@ class MainThread(threading.Thread):
         self.printer_lock = threading.Lock()
         self.dead = threading.Event()
         self.killer = GracefulKiller(self.dead)
+        self.user_topics = Queue.Queue()
+        self.user_topic = None
+        self.times_topic_used = 0
+
         # Initialization
 
         # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
@@ -131,8 +138,21 @@ class MainThread(threading.Thread):
     # Called when switch is briefly tapped.  Invokes time/temperature script.
     def tap(self):
         print("tap")
-        tap_thread = tap.TapThread(self.printer, self.printer_lock)
-        tap_thread.start()
+        gen_thread = tap.GeneratePoemThread(self.printer, self.printer_lock, 
+                                            self.get_current_topic())
+        gen_thread.start()
+
+    def get_current_topic(self):
+        if self.user_topic and self.times_topic_used < TOPIC_USES:
+            self.times_topic_used += 1
+            return self.user_topic
+        self.user_topic = None
+        try:
+            new_topic = self.user_topics.get_nowait()
+            self.times_topic_used = 1
+            return new_topic
+        except Queue.Empty:
+            return random.choice(DEFAULT_TOPICS)
 
     # Called when switch is held down.  Invokes shutdown process.
     def off(self):
@@ -144,7 +164,8 @@ class MainThread(threading.Thread):
     # Called at periodic intervals (30 seconds by default).
     def interval(self):
         print("interval")
-        interval_thread = interval.IntervalThread(self.printer, self.printer_lock)
+        interval_thread = interval.IntervalThread(self.printer, self.printer_lock,
+                                                  self.user_topics)
         interval_thread.start()
 
     def daily(self):
