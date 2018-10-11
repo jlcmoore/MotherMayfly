@@ -34,8 +34,13 @@ import interval
 import tap
 from util import DEFAULT_TOPICS
 
+DEBOUNCE_TIME = .01
 HOLD_TIME = 1     # Duration (s) for shutdown
+INIT_SLEEP = 20
+INTERVAL_TIME = 5
 OFF_SWITCHES = 3     # Number of swtiches in HOLD_TIME to trigger off
+PRINTER_LOCATION = "/dev/serial0"
+PRINTER_TYPE = 19200
 SWITCH_PIN = 24
 TOPIC_USES = 3
 
@@ -46,15 +51,14 @@ class MainThread(threading.Thread):
 
         self.next_interval = 0.0   # Time of next recurring operation
         self.daily_flag = False # Set after daily trigger occurs
-        self.printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
+        self.printer = Adafruit_Thermal(PRINTER_LOCATION, PRINTER_TYPE, timeout=5)
         self.printer_lock = threading.Lock()
         self.dead = threading.Event()
+        # TODO: this is not accepting CTRL C or SIGINT...
         self.killer = GracefulKiller(self.dead)
         self.user_topics = Queue.Queue()
         self.user_topic = None
         self.times_topic_used = 0
-
-        # Initialization
 
         # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
         GPIO.setmode(GPIO.BCM)
@@ -64,7 +68,7 @@ class MainThread(threading.Thread):
 
         # Processor load is heavy at startup; wait a moment to avoid
         # stalling during greeting.
-        time.sleep(30)
+        time.sleep(INIT_SLEEP)
 
         # Show IP address (if network is available)
         try:
@@ -116,7 +120,7 @@ class MainThread(threading.Thread):
                     self.tap()
                 num_switches = 0
                 prev_time = now
-            time.sleep(.01) # to debounce
+            time.sleep(DEBOUNCE_TIME) # to debounce
 
             # Once per day (currently set for 6:30am local time, or when script
             # is first run, if after 6:30am), run daily scripts.
@@ -128,9 +132,9 @@ class MainThread(threading.Thread):
             else:
                 self.daily_flag = False  # Reset daily trigger
 
-            # Every 30 seconds, run interval scripts.
+            # Every interval seconds, run interval scripts.
             if now > self.next_interval:
-                self.next_interval = now + 30.0
+                self.next_interval = now + INTERVAL_TIME
                 self.interval()
 
         print("Ending Main Thread")
@@ -138,7 +142,7 @@ class MainThread(threading.Thread):
     # Called when switch is briefly tapped.  Invokes time/temperature script.
     def tap(self):
         print("tap")
-        gen_thread = tap.GeneratePoemThread(self.printer, self.printer_lock, 
+        gen_thread = tap.GeneratePoemThread(self.printer, self.printer_lock,
                                             self.get_current_topic())
         gen_thread.start()
 
