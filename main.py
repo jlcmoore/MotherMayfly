@@ -23,6 +23,7 @@ import subprocess, time, socket
 from PIL import Image
 from Adafruit_Thermal import *
 import sys
+import threading
 
 # ledPin       = 18
 
@@ -60,83 +61,96 @@ def daily():
   print("daily")
   subprocess.call(["python", "daily.py"])
 
-# Initialization
+class MainThread (threading.Thread):
+  
+  def __init__(self):
+      threading.Thread.__init__(self)
 
-# Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
-GPIO.setmode(GPIO.BCM)
+      # Initialization
 
-# Enable swithc (physical pull-up)
-GPIO.setup(switchPin, GPIO.IN) 
+      # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
+      GPIO.setmode(GPIO.BCM)
 
-# Processor load is heavy at startup; wait a moment to avoid
-# stalling during greeting.
-time.sleep(30)
+      # Enable swithc (physical pull-up)
+      GPIO.setup(switchPin, GPIO.IN) 
 
-# Show IP address (if network is available)
-try:
-	s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	s.connect(('8.8.8.8', 0))
-	printer.print('My IP address is ' + s.getsockname()[0])
-	printer.feed(3)
-except:
-	printer.boldOn()
-	printer.println('Network is unreachable.')
-	printer.boldOff()
-	printer.print('Connect display and keyboard\n'
-	  'for network troubleshooting.')
-	printer.feed(3)
-	exit(0)
+      # Processor load is heavy at startup; wait a moment to avoid
+      # stalling during greeting.
+      time.sleep(30)
 
-# Print greeting image
-print("started up")
-#printer.printImage(Image.open('gfx/hello.png'), True)
-#printer.feed(3)
+      # Show IP address (if network is available)
+      try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 0))
+        printer.print('My IP address is ' + s.getsockname()[0])
+        printer.feed(3)
+      except:
+        printer.boldOn()
+        printer.println('Network is unreachable.')
+        printer.boldOff()
+        printer.print('Connect display and keyboard\n'
+          'for network troubleshooting.')
+        printer.feed(3)
+        exit(0)
 
-# Poll initial switch state and time
-prevSwitchState = GPIO.input(switchPin)
-prevTime        = time.time()
-numSwitches     = 0    # number of times switch is changed in holdTime
+      # Print greeting image
+      print("started up")
+  
+  def run(self):
+    print("Starting Main Thread")
+    # Poll initial switch state and time
+    prevSwitchState = GPIO.input(switchPin)
+    prevTime        = time.time()
+    numSwitches     = 0    # number of times switch is changed in holdTime
 
-# Main loop
-while(True):
+    # Main loop
+    while(True):
 
-  # Poll current switch state and time
-  switchState = GPIO.input(switchPin)
-  t           = time.time()
+      # Poll current switch state and time
+      switchState = GPIO.input(switchPin)
+      t           = time.time()
 
-  if switchState != prevSwitchState:
-    prevSwitchState = switchState
-    if numSwitches == 0:
-      prevTime = t
-    numSwitches = numSwitches + 1
+      if switchState != prevSwitchState:
+        prevSwitchState = switchState
+        if numSwitches == 0:
+          prevTime = t
+        numSwitches = numSwitches + 1
 
-  if (t - prevTime) >= holdTime:
-    if numSwitches >= 3:
-      hold()
-    elif numSwitches == 2:
-      pass
-    elif numSwitches == 1:
-      tap()
-    numSwitches = 0
-    prevTime = t
-  time.sleep(.01) # to debounce
+      if (t - prevTime) >= holdTime:
+        if numSwitches >= 3:
+          hold()
+        elif numSwitches == 2:
+          pass
+        elif numSwitches == 1:
+          tap()
+        numSwitches = 0
+        prevTime = t
+      time.sleep(.01) # to debounce
 
-  # Once per day (currently set for 6:30am local time, or when script
-  # is first run, if after 6:30am), run daily scripts.
-  l = time.localtime()
-  if (60 * l.tm_hour + l.tm_min) > (60 * 6 + 30):
-    if dailyFlag == False:
-      daily()
-      dailyFlag = True
-  else:
-    dailyFlag = False  # Reset daily trigger
+      # Once per day (currently set for 6:30am local time, or when script
+      # is first run, if after 6:30am), run daily scripts.
+      l = time.localtime()
+      if (60 * l.tm_hour + l.tm_min) > (60 * 6 + 30):
+        if dailyFlag == False:
+          daily()
+          dailyFlag = True
+      else:
+        dailyFlag = False  # Reset daily trigger
 
-  # Every 30 seconds, run interval scripts.  'lastId' is passed around
-  # to preserve state between invocations.  Probably simpler to do an
-  # import thing.
-  if t > nextInterval:
-    nextInterval = t + 30.0
-    result = interval()
-    if result is not None:
-      lastId = result.rstrip('\r\n')
+      # Every 30 seconds, run interval scripts.  'lastId' is passed around
+      # to preserve state between invocations.  Probably simpler to do an
+      # import thing.
+      if t > nextInterval:
+        nextInterval = t + 30.0
+        result = interval()
+        if result is not None:
+          lastId = result.rstrip('\r\n')
+    
+    print("Ending Main Thread")
 
+def main():
+  main_thread = MainThread()
+  main_thread.start()
+
+if __name__ == '__main__':
+  main()
