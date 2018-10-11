@@ -24,6 +24,9 @@ from PIL import Image
 from Adafruit_Thermal import *
 import sys
 import threading
+import tap
+import interval
+import util
 
 # ledPin       = 18
 SWITCH_PIN    = 24
@@ -39,7 +42,9 @@ class MainThread (threading.Thread):
             self.dailyFlag    = False # Set after daily trigger occurs
             self.lastId       = '1'   # State information passed to/from interval script
             self.printer      = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
-
+            self.printer_lock = threading.Lock()
+            self.dead = threading.Event()
+            self.killer = util.GracefulKiller(dead)
             # Initialization
 
             # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
@@ -54,6 +59,7 @@ class MainThread (threading.Thread):
 
             # Show IP address (if network is available)
             try:
+                printer_lock.acquire()
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.connect(('8.8.8.8', 0))
                 self.printer.print('My IP address is ' + s.getsockname()[0])
@@ -66,6 +72,8 @@ class MainThread (threading.Thread):
                     'for network troubleshooting.')
                 self.printer.feed(3)
                 exit(0)
+            finally:
+                printer_lock.relase()
 
             # Print greeting image
             print("started up")
@@ -78,7 +86,7 @@ class MainThread (threading.Thread):
         numSwitches     = 0    # number of times switch is changed in HOLD_TIME
 
         # Main loop
-        while(True):
+        while(not self.dead.is_set()):
 
             # Poll current switch state and time
             switchState = GPIO.input(SWITCH_PIN)
@@ -92,11 +100,11 @@ class MainThread (threading.Thread):
 
             if (t - prevTime) >= HOLD_TIME:
                 if numSwitches >= 3:
-                    hold()
+                    self.off()
                 elif numSwitches == 2:
                     pass
                 elif numSwitches == 1:
-                    tap()
+                    self.tap()
                 numSwitches = 0
                 prevTime = t
             time.sleep(.01) # to debounce
@@ -116,37 +124,31 @@ class MainThread (threading.Thread):
             # import thing.
             if t > self.nextInterval:
                 self.nextInterval = t + 30.0
-                result = interval(self.lastId)
-                if result is not None:
-                    self.lastId = result.rstrip('\r\n')
+                interval()
         
         print("Ending Main Thread")
 
-# Called when switch is briefly tapped.  Invokes time/temperature script.
-def tap():
-    print("tap")
-    subprocess.call(["python", "tap.py"])
+    # Called when switch is briefly tapped.  Invokes time/temperature script.
+    def tap(self):
+        print("tap")
+        tap_thread = tap.TapThread(self.printer, self.printer_lock)
+        tap_thread.start()
 
-# Called when switch is held down.  Prints image, invokes shutdown process.
-def hold():
-    print("hold")
-    subprocess.call("sync")
-    subprocess.call("poweroff")
+    # Called when switch is held down.  Invokes shutdown process.
+    def off(self):
+        print("off")
+        self.dead.set()
+        subprocess.call("sync")
+        subprocess.call("poweroff")
 
-# Called at periodic intervals (30 seconds by default).
-# Invokes twitter script.
-def interval(lastId):
-    print("interval")
-    p = subprocess.Popen(["python", "interval.py", str(lastId)],
-        stdout=subprocess.PIPE)
+    # Called at periodic intervals (30 seconds by default).
+    def interval(self):
+        print("interval")
+        interval_thread = tap.IntervalThread(self.printer, self.printer_lock)
+        interval_thread.start()
 
-    return p.communicate()[0] # Script pipes back lastId, returned to main
-
-# Called once per day (6:30am by default).
-# Invokes weather forecast and sudoku-gfx scripts.
-def daily():
-    print("daily")
-    subprocess.call(["python", "daily.py"])
+    def daily(self):
+        pass
 
 def main():
     main_thread = MainThread()

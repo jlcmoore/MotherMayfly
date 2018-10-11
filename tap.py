@@ -13,9 +13,30 @@ from util import TOPICS, TIME_FORMAT, DEFAULT_TOPICS
 from poems import Poem
 import random
 from datetime import datetime, timedelta
-
+import threading
 
 TOPIC_LIFE = 3
+
+class TapThread (threading.Thread):
+    def __init__(self, printer, printer_lock):
+        threading.Thread.__init__(self)
+        self.printer = printer
+        self.printer_lock = printer_lock
+
+    def run(self):
+        print("Starting poem thread")
+
+        topic = read_last_topic()
+
+        # this is very blocking, deal with
+        poem = Poem.generate(topic)
+
+        printer_lock.acquire()
+        print_poem(printer, poem.title, poem.lines, poem.author)
+
+        printer.feed(3)
+        printer.setDefault()
+        printer_lock.release()
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
@@ -41,18 +62,3 @@ def read_last_topic():
             if datetime.now() - prev < timedelta(minutes=TOPIC_LIFE):
                 return topic
         return random.choice(DEFAULT_TOPICS)
-
-def main():
-    printer = Adafruit_Thermal("/dev/serial0", 19200, timeout=5)
-
-    topic = read_last_topic()
-    # this is very blocking, deal with
-
-    poem = Poem.generate(topic)
-    print_poem(printer, poem.title, poem.lines, poem.author)
-
-    printer.feed(3)
-    printer.setDefault()
-
-if __name__ == '__main__':
-    main()
