@@ -54,7 +54,7 @@ class Adafruit_Thermal(Serial):
 	defaultHeatTime =   120
 	firmwareVersion =   268
 	writeToStdout   = False
-        tabWrap         = False
+    tabWrap         = False
 
 	def __init__(self, *args, **kwargs):
 		# NEW BEHAVIOR: if no parameters given, output is written
