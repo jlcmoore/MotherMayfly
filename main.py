@@ -43,6 +43,7 @@ PRINTER_LOCATION = "/dev/serial0"
 PRINTER_TYPE = 19200
 SWITCH_PIN = 24
 TOPIC_USES = 3
+JOIN_WAIT_TIME = .5
 
 class MainThread(threading.Thread):
 
@@ -180,6 +181,8 @@ def main():
     killer = GracefulKiller(dead)
     main_thread = MainThread(dead)
     main_thread.start()
+    while not dead.is_set():
+        main_thread.join(JOIN_WAIT_TIME)
 
 if __name__ == '__main__':
     main()
