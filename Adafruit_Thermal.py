@@ -740,8 +740,8 @@ class Adafruit_Thermal(Serial):
             self.write(str(arg))
         self.write('\n')
 
-        def tabwrapOn(self):
-               self.tabWrap = True
+    def tabwrapOn(self):
+           self.tabWrap = True
 
-        def tabwrapOff(self):
-                self.tabWrap = False
+    def tabwrapOff(self):
+            self.tabWrap = False
