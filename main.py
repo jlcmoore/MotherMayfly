@@ -47,15 +47,15 @@ TOPIC_USES = 3
 class MainThread(threading.Thread):
 
     def __init__(self):
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, dead)
+
+        print("MainThread init start")
 
         self.next_interval = 0.0   # Time of next recurring operation
         self.daily_flag = False # Set after daily trigger occurs
         self.printer = Adafruit_Thermal(PRINTER_LOCATION, PRINTER_TYPE, timeout=5)
         self.printer_lock = threading.Lock()
-        self.dead = threading.Event()
-        # TODO: this is not accepting CTRL C or SIGINT...
-        self.killer = GracefulKiller(self.dead)
+        self.dead = dead
         self.user_topics = Queue.Queue()
         self.user_topic = None
         self.times_topic_used = 0
@@ -89,10 +89,10 @@ class MainThread(threading.Thread):
             self.printer_lock.release()
 
         # Print greeting image
-        print("started up")
+        print("MainThread init end")
 
     def run(self):
-        print("Starting Main Thread")
+        print("Main Thread run")
         # Poll initial switch state and time
         prev_switch_state = GPIO.input(SWITCH_PIN)
         prev_time = time.time()
@@ -137,7 +137,7 @@ class MainThread(threading.Thread):
                 self.next_interval = now + INTERVAL_TIME
                 self.interval()
 
-        print("Ending Main Thread")
+        print("Main Thread end")
 
     # Called when switch is briefly tapped.  Invokes time/temperature script.
     def tap(self, generate=False):
@@ -176,7 +176,9 @@ class MainThread(threading.Thread):
         pass
 
 def main():
-    main_thread = MainThread()
+    dead = threading.Event()
+    killer = GracefulKiller(dead)
+    main_thread = MainThread(dead)
     main_thread.start()
 
 if __name__ == '__main__':

@@ -14,13 +14,14 @@ from poems import Poem
 class PoemThread(threading.Thread):
     def __init__(self, printer, printer_lock, topic, generate):
         threading.Thread.__init__(self)
+        print("PoemThread init")
         self.printer = printer
         self.printer_lock = printer_lock
         self.topic = topic
         self.generate = generate
 
     def run(self):
-        print("Starting poem thread")
+        print("PoemThread run")
 
         poem = None
         if self.generate:
@@ -34,6 +35,8 @@ class PoemThread(threading.Thread):
         self.printer.feed(3)
         self.printer.setDefault()
         self.printer_lock.release()
+
+        print("PoemThread run end")
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()
