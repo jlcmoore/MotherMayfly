@@ -46,8 +46,8 @@ TOPIC_USES = 3
 
 class MainThread(threading.Thread):
 
-    def __init__(self):
-        threading.Thread.__init__(self, dead)
+    def __init__(self, dead):
+        threading.Thread.__init__(self)
 
         print("MainThread init start")
 
