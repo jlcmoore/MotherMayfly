@@ -15,4 +15,5 @@ class GracefulKiller(object):
         """
         Signal received, flag death
         """
+        print("Signal received, dead set")
         self.dead.set()

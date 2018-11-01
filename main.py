@@ -14,9 +14,6 @@
 # http://www.adafruit.com/products/597 Mini Thermal Receipt Printer
 # http://www.adafruit.com/products/600 Printer starter pack
 
-
-#TODO: the printer is really a shared resource and needs to be locked
-
 from __future__ import print_function
 import socket
 import subprocess
