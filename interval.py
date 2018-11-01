@@ -1,6 +1,6 @@
 import threading
 
-import gmail_util
+from gmail import gmail_util
 
 class IntervalThread(threading.Thread):
     def __init__(self, printer, printer_lock, output_topics):
@@ -35,4 +35,4 @@ def print_message(printer, body, author):
     printer.tabwrapOn()
     printer.println(body)
     printer.tabwrapOff()
-    printer.feed(1)
+    printer.feed(3)

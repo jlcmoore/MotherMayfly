@@ -22,7 +22,7 @@ import threading
 import Queue
 import random
 
-from Adafruit_Thermal import Adafruit_Thermal
+from printer import Adafruit_Thermal
 # from PIL import Image #for graphics
 import RPi.GPIO as GPIO
 
@@ -51,7 +51,7 @@ class MainThread(threading.Thread):
 
         self.next_interval = 0.0   # Time of next recurring operation
         self.daily_flag = False # Set after daily trigger occurs
-        self.printer = Adafruit_Thermal(PRINTER_LOCATION, PRINTER_TYPE, timeout=5)
+        self.printer = Adafruit_Thermal.Adafruit_Thermal(PRINTER_LOCATION, PRINTER_TYPE, timeout=5)
         self.printer_lock = threading.Lock()
         self.dead = dead
         self.user_topics = Queue.Queue()

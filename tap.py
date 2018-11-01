@@ -9,7 +9,7 @@
 
 import threading
 
-from poems import Poem
+from poems import poem_utils, hafez
 
 class PoemThread(threading.Thread):
     def __init__(self, printer, printer_lock, topic, generate):
@@ -25,9 +25,9 @@ class PoemThread(threading.Thread):
 
         poem = None
         if self.generate:
-            poem = Poem.generate(self.topic)
+            poem = hafez.hafez_poem(self.topic)
         else:
-            poem = Poem.get_poem()
+            poem = poem_utils.get_real_poem()
 
         self.printer_lock.acquire()
         print_poem(self.printer, poem.title, poem.lines, poem.author)
