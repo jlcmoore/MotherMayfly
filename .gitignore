@@ -2,7 +2,7 @@
 *~
 *.pyc
 logs/
-poems/
+poems/poetrydata
 
 # gmail api needs
 credentials.json
