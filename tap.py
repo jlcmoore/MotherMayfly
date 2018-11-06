@@ -14,7 +14,6 @@ from poems import poem_utils, hafez
 class PoemThread(threading.Thread):
     def __init__(self, printer, printer_lock, topic, generate):
         threading.Thread.__init__(self)
-        print("PoemThread init")
         self.printer = printer
         self.printer_lock = printer_lock
         self.topic = topic
@@ -29,6 +28,7 @@ class PoemThread(threading.Thread):
         else:
             poem = poem_utils.get_real_poem()
 
+        print("PoemThread acquiring lock")
         self.printer_lock.acquire()
         print_poem(self.printer, poem.title, poem.lines, poem.author)
 
@@ -36,7 +36,7 @@ class PoemThread(threading.Thread):
         self.printer.setDefault()
         self.printer_lock.release()
 
-        print("PoemThread run end")
+        print("PoemThread run end, released lock")
 
 def print_poem(printer, title, lines, author):
     printer.underlineOn()

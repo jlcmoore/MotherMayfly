@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+#!env/bin/python -u
 
 # Main script for Adafruit Internet of Things Printer 2.  Monitors switch
 # for taps and holds, performs periodic actions (Twitter polling by default)
@@ -165,7 +165,6 @@ class MainThread(threading.Thread):
 
     # Called at periodic intervals (30 seconds by default).
     def interval(self):
-        print("interval")
         interval_thread = interval.IntervalThread(self.printer, self.printer_lock,
                                                   self.user_topics)
         interval_thread.start()
