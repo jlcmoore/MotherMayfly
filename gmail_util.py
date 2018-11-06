@@ -23,11 +23,11 @@ SCOPES = 'https://www.googleapis.com/auth/gmail.modify'
 CREDENTIALS = 'credentials.json'
 STORAGE = 'storage.json'
 
-def get_new_messages():
+def get_new_messages(unread=True):
     gmail = auth_gmail()
-    unread_msgs = get_unread_msgs_raw(gmail)
-    if unread_msgs:
-        return parse_messages(unread_msgs, gmail)
+    msgs = get_msgs_raw(gmail, unread)
+    if msgs:
+        return parse_messages(msgs, gmail)
     return None
 
 def auth_gmail():
@@ -39,20 +39,20 @@ def auth_gmail():
         creds = oauth2client.tools.run_flow(flow, store)
     return discovery.build('gmail', 'v1', http=creds.authorize(Http()))
 
-def get_unread_msgs_raw(gmail):
-    label_id_one = 'INBOX'
-    label_id_two = 'UNREAD'
+def get_msgs_raw(gmail, unread=True):
+    labelIds = ['INBOX']
+    if unread:
+        labelIds.append('UNREAD')
 
     # Getting all the unread messages from Inbox
     # labelIds can be changed accordingly
-    unread_msgs = gmail.users().messages().list(userId=USER_ID,
-                                                labelIds=[label_id_one,
-                                                          label_id_two]).execute()
-    # unread_msgs is a dictonary
+    msgs = gmail.users().messages().list(userId=USER_ID,
+                                                labelIds=labelIds).execute()
+    # msgs is a dictonary
     messages = None
     num_messages = 0
-    if 'messages' in unread_msgs:
-        messages = unread_msgs['messages']
+    if 'messages' in msgs:
+        messages = msgs['messages']
         num_messages = str(len(messages))
 
     return messages
@@ -98,7 +98,7 @@ def decode(string):
         # decoding from Base64 to UTF-8
     string = string.replace("-", "+")
     string = string.replace("_", "/")
-    decoded = base64.b64decode(bytes(string), 'UTF-8')
+    decoded = base64.urlsafe_b64decode(string.encode('ASCII'))
     return decoded
 
 def parse_message(mssg, gmail):
