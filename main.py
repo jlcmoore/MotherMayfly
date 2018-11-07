@@ -51,7 +51,8 @@ class MainThread(threading.Thread):
 
         self.next_interval = 0.0   # Time of next recurring operation
         self.daily_flag = False # Set after daily trigger occurs
-        self.printer = Adafruit_Thermal.Adafruit_Thermal(PRINTER_LOCATION, PRINTER_TYPE, timeout=5)
+        self.printer = Adafruit_Thermal.Adafruit_Thermal(PRINTER_LOCATION,
+                                                         PRINTER_TYPE, timeout=5)
         self.printer_lock = threading.Lock()
         self.dead = dead
         self.user_topics = Queue.Queue()
@@ -68,25 +69,28 @@ class MainThread(threading.Thread):
         # stalling during greeting.
         time.sleep(INIT_SLEEP)
 
-        # Show IP address (if network is available)
-        try:
-            self.printer_lock.acquire()
-            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.connect(('8.8.8.8', 0))
-            self.printer.print('My IP address is ' + sock.getsockname()[0])
-            self.printer.feed(3)
-        except:
+        with self.printer_lock:
             self.printer.boldOn()
-            self.printer.println('Network is unreachable.')
+            self.printer.setSize('L')
+            self.printer.println("Mother Mayfly")
             self.printer.boldOff()
-            self.printer.print('Connect display and keyboard\n'
-                               'for network troubleshooting.')
-            self.printer.feed(3)
-            exit(0)
-        finally:
-            self.printer_lock.release()
+            self.printer.setSize('S')
+            self.printer.println("Pull cord (three times for help)")
+            # Show IP address (if network is available)
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                sock.connect(('8.8.8.8', 0))
+                self.printer.print('Reachable at ' + sock.getsockname()[0])
+                self.printer.feed(3)
+            except:
+                self.printer.boldOn()
+                self.printer.println('Network is unreachable.')
+                self.printer.boldOff()
+                self.printer.print('Connect display and keyboard\n'
+                                   'for network troubleshooting.')
+                self.printer.feed(3)
+                exit(0)
 
-        # Print greeting image
         print("MainThread init end")
 
     def run(self):
@@ -160,24 +164,26 @@ class MainThread(threading.Thread):
             self.printer.println("Pull the cord")
 
             self.printer.boldOn()
-            self.printer.print("once")
+            self.printer.print("ONCE")
             self.printer.boldOff()
             self.printer.println(" for a computer poem")
 
             self.printer.boldOn()
-            self.printer.print("twice")
+            self.printer.print("TWICE")
             self.printer.boldOff()
             self.printer.println(" for a human poem")
 
             self.printer.boldOn()
-            self.printer.print("thrice")
+            self.printer.print("THRICE")
             self.printer.boldOff()
             self.printer.println(" for this message,")
 
+            self.printer.print("and ")
             self.printer.boldOn()
-            self.printer.print("four times")
+            self.printer.print("FOUR")
             self.printer.boldOff()
-            self.printer.println(" to turn it off.")
+            self.printer.println(" times to turn it off.")
+            self.printer.println()
 
             self.printer.println("Email")
             self.printer.boldOn()
