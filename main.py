@@ -28,7 +28,7 @@ import RPi.GPIO as GPIO
 
 from GracefulKiller import GracefulKiller
 import interval
-import tap
+import poem
 from util import DEFAULT_TOPICS
 
 DEBOUNCE_TIME = .01
@@ -113,9 +113,9 @@ class MainThread(threading.Thread):
                 if num_switches >= 3:
                     self.off()
                 elif num_switches == 2:
-                    self.tap()
+                    self.poem()
                 elif num_switches == 1:
-                    self.tap(generate=True)
+                    self.poem(generate=True)
                 num_switches = 0
                 prev_time = now
             time.sleep(DEBOUNCE_TIME) # to debounce
@@ -138,9 +138,9 @@ class MainThread(threading.Thread):
         print("Main Thread end")
 
     # Called when switch is briefly tapped.  Invokes time/temperature script.
-    def tap(self, generate=False):
-        print("tap poem")
-        gen_thread = tap.PoemThread(self.printer, self.printer_lock,
+    def poem(self, generate=False):
+        print("pull poem")
+        gen_thread = poem.PoemThread(self.printer, self.printer_lock,
                                     self.get_current_topic(), generate)
         gen_thread.start()
 
