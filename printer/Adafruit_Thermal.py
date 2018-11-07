@@ -37,6 +37,7 @@ from __future__ import print_function
 from serial import Serial
 import time
 import sys
+from unidecode import unidecode
 
 class Adafruit_Thermal(Serial):
 
@@ -732,12 +733,12 @@ class Adafruit_Thermal(Serial):
     # with existing code written for the Arduino library.
     def print(self, *args, **kwargs):
         for arg in args:
-            self.write(str(arg))
+            self.write(decode(arg))
 
     # For Arduino code compatibility again
     def println(self, *args, **kwargs):
         for arg in args:
-            self.write(str(arg))
+            self.write(decode(arg))
         self.write('\n')
 
     def tabwrapOn(self):
@@ -745,3 +746,8 @@ class Adafruit_Thermal(Serial):
 
     def tabwrapOff(self):
             self.tabWrap = False
+
+def decode(arg):
+    if isinstance(arg, unicode):
+        return unidecode(arg)
+    return str(arg)
