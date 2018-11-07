@@ -110,8 +110,10 @@ class MainThread(threading.Thread):
                 num_switches = num_switches + 1
 
             if (now - prev_time) >= HOLD_TIME:
-                if num_switches >= 3:
+                if num_switches >= 4:
                     self.off()
+                elif num_switches == 3:
+                    self.print_help()
                 elif num_switches == 2:
                     self.poem()
                 elif num_switches == 1:
@@ -143,6 +145,67 @@ class MainThread(threading.Thread):
         gen_thread = poem.PoemThread(self.printer, self.printer_lock,
                                     self.get_current_topic(), generate)
         gen_thread.start()
+
+    def print_help(self):
+        with self.printer_lock:
+            self.printer.boldOn()
+            self.printer.setSize('L')
+            self.printer.println("Mother Mayfly")
+            self.printer.setSize('S')
+            self.printer.println("Jared Moore")
+            self.printer.boldOff()
+            self.printer.println("2018")
+            self.printer.println()
+
+            self.printer.println("Pull the cord")
+
+            self.printer.boldOn()
+            self.printer.print("once")
+            self.printer.boldOff()
+            self.printer.println(" for a computer poem")
+
+            self.printer.boldOn()
+            self.printer.print("twice")
+            self.printer.boldOff()
+            self.printer.println(" for a human poem")
+
+            self.printer.boldOn()
+            self.printer.print("thrice")
+            self.printer.boldOff()
+            self.printer.println(" for this message,")
+
+            self.printer.boldOn()
+            self.printer.print("four times")
+            self.printer.boldOff()
+            self.printer.println(" to turn it off.")
+
+            self.printer.println("Email")
+            self.printer.boldOn()
+            self.printer.setSize('M')
+            self.printer.println("MotherMayfly@gmail.com")
+            self.printer.setSize('S')
+            self.printer.boldOff()
+            self.printer.println()
+
+            self.printer.println("with a subject of")
+            self.printer.boldOn()
+            self.printer.setSize('M')
+            self.printer.println("message")
+            self.printer.setSize('S')
+            self.printer.boldOff()
+            self.printer.println("to have it print a message.")
+            self.printer.println()
+
+            self.printer.println("with a subject of")
+            self.printer.boldOn()
+            self.printer.setSize('M')
+            self.printer.println("topic")
+            self.printer.setSize('S')
+            self.printer.boldOff()
+            self.printer.println("to set the body of your email")
+            self.printer.println("as the topic of future poems.")
+
+            self.printer.feed(3)
 
     def get_current_topic(self):
         if self.user_topic and self.times_topic_used < TOPIC_USES:
