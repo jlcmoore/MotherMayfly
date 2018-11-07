@@ -743,7 +743,7 @@ class Adafruit_Thermal(Serial):
                                     subsequent_indent=subsequent_indent)
         for arg in args:
             lines = wrap.wrap(arg)
-            if len(lines) > 1:
+            if len(lines) >= 1:
                 self.write(decode(lines[0]))
             for i in range(1, len(lines)):
                 self.write('\n')
