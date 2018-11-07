@@ -35,6 +35,7 @@
 # Python 2.X code using the library usu. needs to include the next line:
 from __future__ import print_function
 from serial import Serial
+import textwrap
 import time
 import sys
 from unidecode import unidecode
@@ -56,6 +57,7 @@ class Adafruit_Thermal(Serial):
     firmwareVersion =   268
     writeToStdout   = False
     tabWrap         = False
+    wordWrap        = True
 
     def __init__(self, *args, **kwargs):
         # NEW BEHAVIOR: if no parameters given, output is written
@@ -192,16 +194,16 @@ class Adafruit_Thermal(Serial):
 
     # Override write() method to keep track of paper feed.
     def write(self, *data):
-        for i in range(len(data)):
-            word = data[i]
-            for c in word:
-                if self.writeToStdout:
-                    sys.stdout.write(c)
-                    continue
-                if c != 0x13:
-                    self.timeoutWait()
-                    d = self.byteTime
-                    if self.column == self.maxColumn:
+            for i in range(len(data)):
+                word = data[i]
+                for c in word:
+                    if self.writeToStdout:
+                        sys.stdout.write(c)
+                        continue
+                    if c != 0x13:
+                        self.timeoutWait()
+                        d = self.byteTime
+                        if self.column == self.maxColumn:
                             super(Adafruit_Thermal, self).write('\n')
                             self.column = 0
                             # Feed line (blank)
@@ -215,17 +217,15 @@ class Adafruit_Thermal(Serial):
                                        self.dotPrintTime) +
                                       (self.lineSpacing *
                                        self.dotFeedTime))
-                            if self.tabWrap:
-                                self.tab()
                         
-                    super(Adafruit_Thermal, self).write(c)
-                    if c == '\n':
-                        self.column = 0
-                    else:
-                        self.column += 1
+                        super(Adafruit_Thermal, self).write(c)
+                        if c == '\n':
+                            self.column = 0
+                        else:
+                            self.column += 1
                                     
-                    self.timeoutSet(d)
-                    self.prevByte = c
+                        self.timeoutSet(d)
+                        self.prevByte = c
 
     # The bulk of this method was moved into __init__,
     # but this is left here for compatibility with older
@@ -261,6 +261,7 @@ class Adafruit_Thermal(Serial):
         self.setLineHeight(30)
         self.boldOff()
         self.tabwrapOff()
+        self.wordWrapOn()
         self.underlineOff()
         self.setBarcodeHeight(50)
         self.setSize('s')
@@ -732,20 +733,38 @@ class Adafruit_Thermal(Serial):
     # but these are here to provide more direct compatibility
     # with existing code written for the Arduino library.
     def print(self, *args, **kwargs):
+        break_long_words = self.wordWrap
+        subsequent_indent = ''
+        if self.tabWrap:
+            subsequent_indent = '\t'
+
+        wrap = textwrap.TextWrapper(break_long_words=break_long_words,
+                                    width=self.maxColumn,
+                                    subsequent_indent=subsequent_indent)
         for arg in args:
-            self.write(decode(arg))
+            lines = wrap.wrap(arg)
+            if len(lines) > 1:
+                self.write(decode(lines[0]))
+            for i in range(1, len(lines)):
+                self.write('\n')
+                self.write(decode(lines[i]))
 
     # For Arduino code compatibility again
     def println(self, *args, **kwargs):
-        for arg in args:
-            self.write(decode(arg))
+        self.print(*args, **kwargs)
         self.write('\n')
 
     def tabwrapOn(self):
-           self.tabWrap = True
+        self.tabWrap = True
 
     def tabwrapOff(self):
-            self.tabWrap = False
+        self.tabWrap = False
+
+    def wordWrapOn(self):
+        self.wordWrap = True
+
+    def wordWrapOff(self):
+        self.wordWrap = False
 
 def decode(arg):
     if isinstance(arg, unicode):
