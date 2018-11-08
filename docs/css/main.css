@@ -1,0 +1,251 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+
+.section{
+  min-height: 100vh;
+}
+
+.caption {
+  font-weight: bold;
+  font-size: 24pt;
+}
+
+.vertical-center {
+  display: flex;
+  align-items: center;
+}
+
+.title-gif {
+  background-color:transparent;
+  overflow: hidden;
+  min-height: 50%;
+  height: 500px;
+ }
+
+h1, h2, h3, h4 {
+  font-family: 'Courier', sans-serif;
+}
+
+.footnote{
+  padding-left: 1rem;
+font-size: 10pt;
+}
+
+.full-jumbo {
+  height: 100vh;
+}
+
+.title-gif h1 {
+  font-size: 60px;
+}
+
+.full-jumbo h1 {
+  font-size: 7vw;
+}
+
+.full-jumbo h2 {
+  font-size: 4vw;
+  font-weight: 400;
+}
+
+.full-jumbo h3 {
+  font-size: 3vw;
+  font-weight: 300;
+}
+
+.full-jumbo p {
+  font-size: 12pt;
+  font-weight: 300;
+}
+
+.full-jumbo .container {
+  max-width: 100vw;
+}
+
+.background-video {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: -100;
+  -webkit-transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%) translateY(-50%);
+  background: url("../img/printer_front.mov.gif") no-repeat;
+  background-size: cover;
+}
+
+.filter {
+  filter: brightness(70%);
+}
+.mayfly {
+  height: 1em;
+}
+.img-overlay {
+  background-color: #17234E;
+  background-image: url("../img/printer_front.mov.gif");
+  position: absolute;
+  width: 100%;
+  height: inherit;
+  z-index: -1;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+
+  background-repeat: no-repeat;
+  background-position: center;
+  -webkit-background-size: cover;
+  background-size: cover;
+}
+
+#footnotes li {
+  margin: 0 0 .5em 1em;
+  text-indent: -1em ;
+}
+
+#footnotes {
+  list-style: none;
+  padding-left: 0em;
+  font-size: 10pt;
+}
+
+.pad-container {
+  padding-top: 130px;
+}
+
+.pad-container-responsive {
+  padding-top: 15vh;
+}
+
+.white-text {
+  color: #ffffff;
+}
+
+.top-buffer {
+  padding-top: 2%;
+}
+
+.story-item {
+  padding: 20px;
+}
+
+.story-item p{
+  font-weight: 300;
+  font-size: 10pt;
+}
+
+.story-quote {
+  padding-left: 20px;
+  padding-right: 30px;
+}
+
+.img-box {
+  height: 80%;
+  padding-bottom: 2em;
+}
+
+.img-box img {
+  max-height: 100%;
+}
+
+body {
+  font-size: 12pt;
+  font-family: Adobe Caslon,Georgia,Times New Roman,Times,serif;
+}
+
+p, li {
+  line-height: 19.5pt;
+  font-weight: 400;
+}
+
+footer {
+  font-size: 11pt;
+  padding-bottom: .5em;
+
+}
+
+footer p {
+  margin-bottom: 0;
+  line-height: 18pt;
+}
+
+/* https://stackoverflow.com/questions/20547819/vertical-align-with-bootstrap-3/27771750#27771750
+*/
+.row-xs-flex-center {
+    display:flex;
+    align-items:center;
+}
+
+.block-center {
+    float: none;
+    margin: 0 auto;
+}
+
+.nav_may {
+  text-align: center;
+  font-size: 15px;
+}
+
+.navbar .container {
+  padding-right: 0px;
+  padding-left: 0px;
+}
+
+#logo {
+  padding: 0;
+
+}
+
+#logo img {
+  max-height: 50px;
+}
+
+.navbar-brand {
+  line-height: inherit;
+}
+
+.navbar-brand>img {
+  height: 100%;
+  width: auto;
+}
+
+.center.navbar .nav,
+.center.navbar .nav > li {
+  float:none;
+  display:inline-block;
+  *display:inline; /* ie7 fix */
+  *zoom:1; /* hasLayout ie7 trigger */
+  vertical-align: top;
+}
+
+@media ( min-width:700px ) {
+  .row-sm-flex-center {
+    display:flex;
+    align-items:center;
+  }
+}
+@media ( min-width: 992px ) {
+  .row-md-flex-center {
+    display:flex;
+    align-items:center;
+  }
+}
+@media ( min-width: 1200px ) {
+  .row-lg-flex-center {
+    display:flex;
+    align-items:center;
+  }
+}
+/* end */
+
+
+
+

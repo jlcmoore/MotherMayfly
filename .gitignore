@@ -13,3 +13,5 @@ token.json
 env/
 
 topics.txt
+
+.DS_Store
