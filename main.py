@@ -70,12 +70,7 @@ class MainThread(threading.Thread):
         time.sleep(INIT_SLEEP)
 
         with self.printer_lock:
-            self.printer.boldOn()
-            self.printer.setSize('L')
-            self.printer.println("Mother Mayfly")
-            self.printer.boldOff()
-            self.printer.setSize('S')
-            self.printer.println("Pull cord (three times for help)")
+            self.print_startup()
             # Show IP address (if network is available)
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -92,6 +87,15 @@ class MainThread(threading.Thread):
                 exit(0)
 
         print("MainThread init end")
+
+    def print_startup(self):
+        self.printer.boldOn()
+        self.printer.setSize('L')
+        self.printer.println("Mother Mayfly")
+        self.printer.boldOff()
+        self.printer.setSize('S')
+        self.printer.println("jaredmoore.org/MotherMayfly")
+        self.printer.println("Pull cord (three times for help)")
 
     def run(self):
         print("Main Thread run")
@@ -159,6 +163,7 @@ class MainThread(threading.Thread):
             self.printer.println("Jared Moore")
             self.printer.boldOff()
             self.printer.println("2018")
+            self.printer.println("jaredmoore.org/MotherMayfly")
             self.printer.println()
 
             self.printer.println("Pull the cord")
