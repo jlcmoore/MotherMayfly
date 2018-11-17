@@ -1,0 +1,6 @@
+./mov_to_gif.sh mothermayfly.m4v 560 170 170 1470 15 20
+./mov_to_gif.sh pull.m4v 780 1500 300 420 10 10
+./mov_to_gif.sh flies_print.m4v 750 500 140 1096 10 10
+./mov_to_gif.sh mother_son_print.m4v 708 1594 160 50 10 10 
+./mov_to_gif.sh burn_high_trim.mov 582 1076 9 0 20 20
+./mov_to_gif.sh front.mov 1220 in_h 60 0 [need delay]

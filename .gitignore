@@ -15,3 +15,7 @@ env/
 topics.txt
 
 .DS_Store
+
+*.mov
+*.avi
+*.m4v
