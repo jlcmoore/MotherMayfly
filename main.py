@@ -89,7 +89,7 @@ class MainThread(threading.Thread):
             self.printer.print('Connect display and keyboard\n'
                                'for network troubleshooting.')
             self.printer.feed(3)
-            self.off()
+            self.off(reboot=True)
 
     def print_startup(self):
         self.printer.boldOn()
@@ -234,11 +234,14 @@ class MainThread(threading.Thread):
             return random.choice(DEFAULT_TOPICS)
 
     # Called when switch is held down.  Invokes shutdown process.
-    def off(self):
+    def off(self, reboot=False):
         print("off")
         self.dead.set()
         subprocess.call("sync")
-        subprocess.call("reboot")
+        process = "shutdown"
+        if reboot:
+            process = "reboot"
+        subprocess.call(process)
 
     # Called at periodic intervals (30 seconds by default).
     def interval(self):
