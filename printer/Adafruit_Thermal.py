@@ -203,7 +203,8 @@ class Adafruit_Thermal(Serial):
                     if c != 0x13:
                         self.timeoutWait()
                         d = self.byteTime
-                        if self.column == self.maxColumn:
+                        if self.column == self.maxColumn and len(word) > self.maxColumn:
+                            import pdb; pdb.set_trace()
                             super(Adafruit_Thermal, self).write('\n')
                             self.column = 0
                             # Feed line (blank)

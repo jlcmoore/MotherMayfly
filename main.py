@@ -55,6 +55,7 @@ class MainThread(threading.Thread):
                                                          PRINTER_TYPE, timeout=5)
         self.printer_lock = threading.Lock()
         self.dead = dead
+        self.network_flag = threading.Event()
         self.user_topics = Queue.Queue()
         self.user_topic = None
         self.times_topic_used = 0
@@ -72,21 +73,23 @@ class MainThread(threading.Thread):
         with self.printer_lock:
             self.print_startup()
             # Show IP address (if network is available)
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                sock.connect(('8.8.8.8', 0))
-                self.printer.print('Reachable at ' + sock.getsockname()[0])
+            ip_address = getip(self.network_flag)
+            if ip_address:
+                self.printer.print('Reachable at ' + ip_address)
                 self.printer.feed(3)
-            except:
-                self.printer.boldOn()
-                self.printer.println('Network is unreachable.')
-                self.printer.boldOff()
-                self.printer.print('Connect display and keyboard\n'
-                                   'for network troubleshooting.')
-                self.printer.feed(3)
-                exit(0)
+            self.network_check()
 
         print("MainThread init end")
+
+    def network_check(self):
+        if self.network_flag.is_set():
+            self.printer.boldOn()
+            self.printer.println('Network is unreachable.')
+            self.printer.boldOff()
+            self.printer.print('Connect display and keyboard\n'
+                               'for network troubleshooting.')
+            self.printer.feed(3)
+            self.off()
 
     def print_startup(self):
         self.printer.boldOn()
@@ -185,7 +188,7 @@ class MainThread(threading.Thread):
 
             self.printer.print("and ")
             self.printer.boldOn()
-            self.printer.print("FOUR")
+            self.printer.print(" FOUR")
             self.printer.boldOff()
             self.printer.println(" times to turn it off.")
             self.printer.println()
@@ -235,16 +238,36 @@ class MainThread(threading.Thread):
         print("off")
         self.dead.set()
         subprocess.call("sync")
-        subprocess.call("poweroff")
+        subprocess.call("reboot")
 
     # Called at periodic intervals (30 seconds by default).
     def interval(self):
+        self.network_check()
+
+        internet_thread = threading.Thread(target=getip, args=(self.network_flag,))
+        internet_thread.start()
+
         interval_thread = interval.IntervalThread(self.printer, self.printer_lock,
                                                   self.user_topics)
         interval_thread.start()
 
     def daily(self):
         pass
+
+def getip(flag, host='8.8.8.8', port=0, timeout=3):
+    """
+    Host: 8.8.8.8 (google-public-dns-a.google.com)
+    OpenPort: 53/tcp
+    Service: domain (DNS/TCP)
+    """
+    try:
+        socket.setdefaulttimeout(timeout)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.connect((host, port))
+        return sock.getsockname()[0]
+    except Exception as ex:
+        print(ex.message)
+        flag.set()
 
 def main():
     dead = threading.Event()
