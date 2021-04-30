@@ -11,6 +11,6 @@ pyasn1-modules==0.2.2
 pyserial==3.4
 PyYAML==5.4
 RPi.GPIO==0.6.4
-rsa==4.1
+rsa==4.7
 six==1.11.0
 uritemplate==3.0.0
