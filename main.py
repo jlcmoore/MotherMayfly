@@ -19,7 +19,6 @@ import socket
 import subprocess
 import time
 import threading
-import Queue
 import random
 
 from printer import Adafruit_Thermal

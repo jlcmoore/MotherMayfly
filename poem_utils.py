@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
-from poetrydata import poem
+from poetrydata import poem, read
 import openai
 
 CREDENTIALS = 'openai.json'
@@ -31,22 +31,22 @@ FAILED_GENERATION_POEM_TITLES = []
 
 def serial_to_poem(serial):
     title = ''
-    if 'title' in serial and isinstance(serial['title'], basestring):
+    if 'title' in serial and isinstance(serial['title'], str):
         title = serial['title']
         author = ''
-    if 'author' in serial and isinstance(serial['author'], basestring):
+    if 'author' in serial and isinstance(serial['author'], str):
         author = serial['author']
         lines = []
     if 'lines' in serial and isinstance(serial['lines'], list):
         lines = serial['lines']
-    return Poem.Poem(title=title, lines=lines, author=author)
+    return poem.Poem(title=title, lines=lines, author=author)
 
 def get_real_poem():
     return read.get_random_poem()
 
 def get_context():
     base_poem = None
-    while base_poem is None or base_poem['title'] in FAILED_GENERATION_POEM_TITLES:
+    while base_poem is None or base_poem.title in FAILED_GENERATION_POEM_TITLES:
         base_poem = get_real_poem()
 
     firstStanza = ""
@@ -58,7 +58,7 @@ def get_context():
     if len(firstStanza) > 0:
         return (base_poem, firstStanza)
     else:
-        FAILED_GENERATION_POEM_TITLES.append(base_poem['title'])
+        FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
         return None
         
 def get_generated_poem():
@@ -67,11 +67,10 @@ def get_generated_poem():
         base_poem, firstStanza = get_context()
 
     generatedPoem = ""
-    notFinished = True
     responses = 0
     context = firstStanza
     blankResponses = 0
-    while generatedPoem.count('\n') < len(base_poem['lines']) and blankResponses < 2:
+    while generatedPoem.count('\n') < len(base_poem.lines) and blankResponses < 2:
         response = openai.Completion.create(engine="ada",
                                             prompt=context,
                                             max_tokens=10,
@@ -88,7 +87,7 @@ def get_generated_poem():
 
         responses += 1
         if responses > 2 and len(generatedPoem) < 2:
-            FAILED_GENERATION_POEM_TITLES.append(base_poem['title'])
+            FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
             return None
 
         responseText = response['choices'][0]['text']
