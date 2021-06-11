@@ -16,3 +16,5 @@ git clone https://github.com/adafruit/Python-Thermal-Printer
 
 
 sudo apt-get install sqlite3
+
+#set "OPENAI_API_KEY" into the json file

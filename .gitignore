@@ -19,3 +19,6 @@ topics.txt
 *.mov
 *.avi
 *.m4v
+
+# credential files
+*.json
