@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import json
 from poetrydata import poem, read
+import openai
+
+CREDENTIALS = 'openai.json'
+
+with open(CREDENTIALS, 'r') as f:
+    openai.api_key = json.load(f)["OPENAI_API_KEY"]
 
 TEST_POEMS = [
     {'title' : "no poem", 'lines' : [], 'author' : "me"},
@@ -20,17 +27,80 @@ REAL_TESTS = [
     {'title' : "When You are Old", 'author' : "William B. Yeats", 'lines' : ["When you are old and grey and full of sleep,", "And nodding by the fire, take down this book,", "And slowly read, and dream of the soft look", "Your eyes had once, and of their shadows deep;", "How many loved your moments of glad grace,", "And loved your beauty with love false or true,", "But one man loved the pilgrim Soul in you,", "And loved the sorrows of your changing face;", "And bending down beside the glowing bars,", "Murmur, a little sadly, how Love fled", "And paced upon the mountains overhead", "And hid his face amid a crowd of stars"]}
 ]
 
+FAILED_GENERATION_POEM_TITLES = []
+
 def serial_to_poem(serial):
     title = ''
-    if 'title' in serial and isinstance(serial['title'], basestring):
+    if 'title' in serial and isinstance(serial['title'], str):
         title = serial['title']
         author = ''
-    if 'author' in serial and isinstance(serial['author'], basestring):
+    if 'author' in serial and isinstance(serial['author'], str):
         author = serial['author']
         lines = []
     if 'lines' in serial and isinstance(serial['lines'], list):
         lines = serial['lines']
-    return Poem.Poem(title=title, lines=lines, author=author)
+    return poem.Poem(title=title, lines=lines, author=author)
 
 def get_real_poem():
     return read.get_random_poem()
+
+def get_context():
+    base_poem = None
+    while base_poem is None or base_poem.title in FAILED_GENERATION_POEM_TITLES:
+        base_poem = get_real_poem()
+
+    firstStanza = ""
+    for line in base_poem['lines']:
+        if len(line) == 0:
+            break
+        firstStanza += line + "\n"
+
+    if len(firstStanza) > 0:
+        return (base_poem, firstStanza)
+    else:
+        FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
+        return None
+        
+def get_generated_poem():
+    base_poem, firstStanza = None, None
+    while base_poem is None:
+        base_poem, firstStanza = get_context()
+
+    generatedPoem = ""
+    responses = 0
+    context = firstStanza
+    blankResponses = 0
+    while generatedPoem.count('\n') < len(base_poem.lines) and blankResponses < 2:
+        response = openai.Completion.create(engine="ada",
+                                            prompt=context,
+                                            max_tokens=10,
+                                            frequency_penalty=.1,
+                                            presence_penalty=.1,
+                                            temperature=.8,
+                                            stop=["\n"])
+        print(response)
+
+        if response is None or 'choices' not in response or len(response['choices']) < 1:
+            continue
+
+        thisLine = ""
+
+        responses += 1
+        if responses > 2 and len(generatedPoem) < 2:
+            FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
+            return None
+
+        responseText = response['choices'][0]['text']
+        thisLine += responseText
+        
+        if len(responseText) < 1:
+            blankResponses += 1
+
+        if response['choices'][0]['finish_reason'] == "stop":
+            thisLine += '\n'
+
+        generatedPoem += thisLine
+        context += thisLine
+
+    lines = generatedPoem.split('\n')
+    return poem.Poem(title=lines[0], lines=lines, author="computer")

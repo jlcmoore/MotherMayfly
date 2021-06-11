@@ -19,7 +19,6 @@ import socket
 import subprocess
 import time
 import threading
-import Queue
 import random
 
 from printer import Adafruit_Thermal
@@ -29,7 +28,6 @@ import RPi.GPIO as GPIO
 from GracefulKiller import GracefulKiller
 import interval
 import poem
-from util import DEFAULT_TOPICS
 
 DEBOUNCE_TIME = .01
 HOLD_TIME = 1     # Duration (s) for shutdown
@@ -39,7 +37,6 @@ OFF_SWITCHES = 3     # Number of swtiches in HOLD_TIME to trigger off
 PRINTER_LOCATION = "/dev/serial0"
 PRINTER_TYPE = 19200
 SWITCH_PIN = 24
-TOPIC_USES = 3
 JOIN_WAIT_TIME = .5
 
 class MainThread(threading.Thread):
@@ -56,9 +53,6 @@ class MainThread(threading.Thread):
         self.printer_lock = threading.Lock()
         self.dead = dead
         self.network_flag = threading.Event()
-        self.user_topics = Queue.Queue()
-        self.user_topic = None
-        self.times_topic_used = 0
 
         # Use Broadcom pin numbers (not Raspberry Pi pin numbers) for GPIO
         GPIO.setmode(GPIO.BCM)
@@ -97,7 +91,7 @@ class MainThread(threading.Thread):
         self.printer.println("Mother Mayfly")
         self.printer.boldOff()
         self.printer.setSize('S')
-        self.printer.println("jaredmoore.org/MotherMayfly")
+#        self.printer.println("jaredmoore.org/MotherMayfly")
         self.printer.println("Pull cord (three times for help)")
 
     def run(self):
@@ -153,8 +147,7 @@ class MainThread(threading.Thread):
     # Called when switch is briefly tapped.  Invokes time/temperature script.
     def poem(self, generate=False):
         print("pull poem")
-        gen_thread = poem.PoemThread(self.printer, self.printer_lock,
-                                    self.get_current_topic(), generate)
+        gen_thread = poem.PoemThread(self.printer, self.printer_lock, generate)
         gen_thread.start()
 
     def print_help(self):
@@ -165,8 +158,8 @@ class MainThread(threading.Thread):
             self.printer.setSize('S')
             self.printer.println("Jared Moore")
             self.printer.boldOff()
-            self.printer.println("2018")
-            self.printer.println("jaredmoore.org/MotherMayfly")
+            self.printer.println("2021")
+#            self.printer.println("jaredmoore.org/MotherMayfly")
             self.printer.println()
 
             self.printer.println("Pull the cord")
@@ -210,28 +203,17 @@ class MainThread(threading.Thread):
             self.printer.println("to have it print a message.")
             self.printer.println()
 
-            self.printer.println("with a subject of")
-            self.printer.boldOn()
-            self.printer.setSize('M')
-            self.printer.println("topic")
-            self.printer.setSize('S')
-            self.printer.boldOff()
-            self.printer.println("to set the body of your email")
-            self.printer.println("as the topic of future poems.")
+            # TODO: the below
+            #self.printer.println("with a subject of")
+            #self.printer.boldOn()
+            #self.printer.setSize('M')
+            #self.printer.println("poem")
+            #self.printer.setSize('S')
+            #self.printer.boldOff()
+            #self.printer.println("to set the body of your email")
+            #self.printer.println("as a future poem.")
 
             self.printer.feed(3)
-
-    def get_current_topic(self):
-        if self.user_topic and self.times_topic_used < TOPIC_USES:
-            self.times_topic_used += 1
-            return self.user_topic
-        self.user_topic = None
-        try:
-            new_topic = self.user_topics.get_nowait()
-            self.times_topic_used = 1
-            return new_topic
-        except Queue.Empty:
-            return random.choice(DEFAULT_TOPICS)
 
     # Called when switch is held down.  Invokes shutdown process.
     def off(self, reboot=False):
@@ -247,11 +229,12 @@ class MainThread(threading.Thread):
     def interval(self):
         self.network_check()
 
+        # TODO: save util.py variables
+
         internet_thread = threading.Thread(target=getip, args=(self.network_flag,))
         internet_thread.start()
 
-        interval_thread = interval.IntervalThread(self.printer, self.printer_lock,
-                                                  self.user_topics)
+        interval_thread = interval.IntervalThread(self.printer, self.printer_lock)
         interval_thread.start()
 
     def daily(self):
