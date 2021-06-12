@@ -27,7 +27,9 @@ REAL_TESTS = [
     {'title' : "When You are Old", 'author' : "William B. Yeats", 'lines' : ["When you are old and grey and full of sleep,", "And nodding by the fire, take down this book,", "And slowly read, and dream of the soft look", "Your eyes had once, and of their shadows deep;", "How many loved your moments of glad grace,", "And loved your beauty with love false or true,", "But one man loved the pilgrim Soul in you,", "And loved the sorrows of your changing face;", "And bending down beside the glowing bars,", "Murmur, a little sadly, how Love fled", "And paced upon the mountains overhead", "And hid his face amid a crowd of stars"]}
 ]
 
+
 FAILED_GENERATION_POEM_TITLES = []
+
 
 def serial_to_poem(serial):
     title = ''
@@ -50,7 +52,7 @@ def get_context():
         base_poem = get_real_poem()
 
     firstStanza = ""
-    for line in base_poem['lines']:
+    for line in base_poem.lines:
         if len(line) == 0:
             break
         firstStanza += line + "\n"
@@ -66,6 +68,8 @@ def get_generated_poem():
     while base_poem is None:
         base_poem, firstStanza = get_context()
 
+    print(base_poem)
+    
     generatedPoem = ""
     responses = 0
     context = firstStanza
@@ -78,7 +82,6 @@ def get_generated_poem():
                                             presence_penalty=.1,
                                             temperature=.8,
                                             stop=["\n"])
-        print(response)
 
         if response is None or 'choices' not in response or len(response['choices']) < 1:
             continue

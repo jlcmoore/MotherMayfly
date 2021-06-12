@@ -115,6 +115,9 @@ def parse_message(mssg, gmail):
             body = parts[0]['body']
         else:
             return None
+    if 'data' not in body:
+        return None
+
     body_data = body['data']
 
     msg_dict = extract_headers(header)
