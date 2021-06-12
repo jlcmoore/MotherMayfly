@@ -189,6 +189,41 @@ class Adafruit_Thermal(Serial):
 				self.timeoutWait()
 				self.timeoutSet(len(args) * self.byteTime)
 				super(Adafruit_Thermal, self).write(bytes([arg]))
+	
+	# Override write() method to keep track of paper feed.
+	def writeOther(self, *data):
+			for i in range(len(data)):
+				word = data[i]
+				for c in word:
+					if self.writeToStdout:
+						sys.stdout.write(c)
+						continue
+					if c != 0x13:
+						self.timeoutWait()
+						d = self.byteTime
+						if self.column == self.maxColumn and len(word) > self.maxColumn:
+							super(Adafruit_Thermal, self).write(encode('\n'))
+							self.column = 0
+							# Feed line (blank)
+							if self.prevByte == '\n':
+								d += ((self.charHeight +
+									   self.lineSpacing) *
+									   self.dotFeedTime)
+							else:
+								# Text line
+								d += ((self.charHeight *
+									   self.dotPrintTime) +
+									  (self.lineSpacing *
+									   self.dotFeedTime))
+						
+						super(Adafruit_Thermal, self).write(c)
+						if c == b'\n':
+							self.column = 0
+						else:
+							self.column += 1
+									
+						self.timeoutSet(d)
+						self.prevByte = c
 
 	# Override write() method to keep track of paper feed.
 	def write(self, *data):
