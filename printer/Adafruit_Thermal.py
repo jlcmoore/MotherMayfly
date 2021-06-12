@@ -54,8 +54,8 @@ class Adafruit_Thermal(Serial):
 	defaultHeatTime =   120
 	firmwareVersion =   268
 	writeToStdout   = False
-        wordWrap        = True
-        tabWrap         = False
+	wordWrap        = True
+	tabWrap         = False
 
 	def __init__(self, *args, **kwargs):
 		# NEW BEHAVIOR: if no parameters given, output is written
@@ -260,8 +260,8 @@ class Adafruit_Thermal(Serial):
 		self.underlineOff()
 		self.setBarcodeHeight(50)
 		self.setSize('s')
-                self.tabwrapOff()
-                self.wordWrapOn()
+		self.tabwrapOff()
+		self.wordWrapOn()
 		self.setCharset()
 		self.setCodePage()
 
@@ -399,7 +399,7 @@ class Adafruit_Thermal(Serial):
 
 	def normal(self):
 		self.printMode = 0
-                self.tabWrapOff()
+		self.tabWrapOff()
 		self.writePrintMode()
 
 	def inverseOn(self):
@@ -729,40 +729,40 @@ class Adafruit_Thermal(Serial):
 	# but these are here to provide more direct compatibility
 	# with existing code written for the Arduino library.
 	def print(self, *args, **kwargs):
-                break_long_words = self.wordWrap
-                subsequent_indent = ''
-                if self.tabWrap:
-                        subsequent_indent = '\t'
+		break_long_words = self.wordWrap
+		subsequent_indent = ''
+		if self.tabWrap:
+			subsequent_indent = '\t'
                         
-                wrap = textwrap.TextWrapper(break_long_words=break_long_words,
-                                            width=self.maxColumn,
-                                            subsequent_indent=subsequent_indent)
+		wrap = textwrap.TextWrapper(break_long_words=break_long_words,
+									width=self.maxColumn,
+									subsequent_indent=subsequent_indent)
 		for arg in args:
-                        lines = wrap.wrap(arg)
-                        if len(lines) > 1:
-                                self.write(encode(lines[0]))
-                        for i in range(1, len(lines)):
-                                self.write(encode('\n'))
-                                self.write(encode(lines[i]))
+			lines = wrap.wrap(arg)
+			if len(lines) > 1:
+				self.write(encode(lines[0]))
+			for i in range(1, len(lines)):
+				self.write(encode('\n'))
+				self.write(encode(lines[i]))
 
 	# For Arduino code compatibility again
 	def println(self, *args, **kwargs):
-                self.print(*args, **kwargs)
+		self.print(*args, **kwargs)
 		self.write('\n'.encode('cp437', 'ignore'))
 
-        def tabwrapOn(self):
-                self.tabWrap = True
+	def tabwrapOn(self):
+		self.tabWrap = True
 
-        def tabwrapOff(self):
-                self.tabWrap = False
+	def tabwrapOff(self):
+		self.tabWrap = False
 
-        def wordWrapOn(self):
-                self.wordWrap = True
+	def wordWrapOn(self):
+		self.wordWrap = True
 
-        def wordWrapOff(self):
-                self.wordWrap = False
+	def wordWrapOff(self):
+		self.wordWrap = False
 
 def encode(arg):
-        if not isinstance(arg, str):
-                arg = str(arg)
-        return arg.encode('cp437', 'ignore')
+	if not isinstance(arg, str):
+		arg = str(arg)
+	return arg.encode('cp437', 'ignore')
