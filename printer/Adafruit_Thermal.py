@@ -729,17 +729,20 @@ class Adafruit_Thermal(Serial):
 	# but these are here to provide more direct compatibility
 	# with existing code written for the Arduino library.
 	def print(self, *args, **kwargs):
+		for arg in args:
+			self.write(encode(arg))
+		return
 		break_long_words = self.wordWrap
 		subsequent_indent = ''
 		if self.tabWrap:
 			subsequent_indent = '\t'
-                        
+		import pdb; pdb.set_trace()        
 		wrap = textwrap.TextWrapper(break_long_words=break_long_words,
-									width=self.maxColumn,
-									subsequent_indent=subsequent_indent)
+					    width=self.maxColumn,
+					    subsequent_indent=subsequent_indent)
 		for arg in args:
 			lines = wrap.wrap(arg)
-			if len(lines) > 1:
+			if len(lines) >= 1:
 				self.write(encode(lines[0]))
 			for i in range(1, len(lines)):
 				self.write(encode('\n'))
