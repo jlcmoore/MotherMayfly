@@ -2,6 +2,7 @@
 
 import json
 from poetrydata import poem, read
+import re
 import openai
 
 CREDENTIALS = 'openai.json'
@@ -62,24 +63,18 @@ def get_context():
     else:
         FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
         return None
-        
-def get_generated_poem():
-    base_poem, firstStanza = None, None
-    while base_poem is None:
-        base_poem, firstStanza = get_context()
 
-    print(base_poem)
-    
+def generate_stanza(initialContext):
     generatedPoem = ""
     responses = 0
-    context = firstStanza
+    context = initialContext
     blankResponses = 0
-    while generatedPoem.count('\n') < len(base_poem.lines) and blankResponses < 2:
-        response = openai.Completion.create(engine="ada",
+    while generatedPoem.count('\n') < initialContext.count('\n') and blankResponses < 3:
+        response = openai.Completion.create(engine="curie",
                                             prompt=context,
                                             max_tokens=10,
                                             frequency_penalty=.1,
-                                            presence_penalty=.1,
+                                            presence_penalty=.2,
                                             temperature=.8,
                                             stop=["\n"])
 
@@ -90,7 +85,6 @@ def get_generated_poem():
 
         responses += 1
         if responses > 2 and len(generatedPoem) < 2:
-            FAILED_GENERATION_POEM_TITLES.append(base_poem.title)
             return None
 
         responseText = response['choices'][0]['text']
@@ -98,12 +92,43 @@ def get_generated_poem():
         
         if len(responseText) < 1:
             blankResponses += 1
+        else:
+            blankResponses = 0
 
         if response['choices'][0]['finish_reason'] == "stop":
             thisLine += '\n'
 
         generatedPoem += thisLine
-        context += thisLine
+        if responses < 2:
+            context = initialContext.strip() + "\n\n" + thisLine
+        else:
+            context += thisLine
 
+    return generatedPoem
+        
+def get_generated_poem():
+    base_poem, firstStanza = None, None
+    while base_poem is None:
+        base_poem, firstStanza = get_context()
+
+    print(base_poem)
+
+    generatedPoem = generate_stanza(str(base_poem))
+
+    generatedPoem = generatedPoem.strip()
+    generatedPoem = re.sub(r"\n{3,}", "\n\n", generatedPoem)
+    context = generatedPoem + "\nThe title of this poem is \""
+    response = openai.Completion.create(engine="curie",
+                                        prompt=context,
+                                        max_tokens=20,
+                                        temperature=.8,
+                                        stop=['"'])
+        
     lines = generatedPoem.split('\n')
-    return poem.Poem(title=lines[0], lines=lines, author="computer")
+
+    if 'choices' in response and 'text' in response['choices'][0]:
+        title = response['choices'][0]['text']
+    else:
+        title = lines[0]
+        
+    return poem.Poem(title=title, lines=lines, author="computer")
