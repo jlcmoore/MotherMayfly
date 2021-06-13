@@ -183,7 +183,7 @@ class Adafruit_Thermal(Serial):
 	def writeBytes(self, *args):
 		if self.writeToStdout:
 			for arg in args:
-				sys.stdout.write(bytes([arg]))
+				sys.stdout.write(decode(bytes([arg])))
 		else:
 			for arg in args:
 				self.timeoutWait()
@@ -191,46 +191,46 @@ class Adafruit_Thermal(Serial):
 				super(Adafruit_Thermal, self).write(bytes([arg]))
 	
 	# Override write() method to keep track of paper feed.
-	def writeOther(self, *data):
-			for i in range(len(data)):
-				word = data[i]
-				for c in word:
-					if self.writeToStdout:
-						sys.stdout.write(c)
-						continue
-					if c != 0x13:
-						self.timeoutWait()
-						d = self.byteTime
-						if self.column == self.maxColumn and len(word) > self.maxColumn:
-							super(Adafruit_Thermal, self).write(encode('\n'))
-							self.column = 0
-							# Feed line (blank)
-							if self.prevByte == '\n':
-								d += ((self.charHeight +
-									   self.lineSpacing) *
-									   self.dotFeedTime)
-							else:
-								# Text line
-								d += ((self.charHeight *
-									   self.dotPrintTime) +
-									  (self.lineSpacing *
-									   self.dotFeedTime))
-						
-						super(Adafruit_Thermal, self).write(c)
-						if c == b'\n':
-							self.column = 0
+	def writeOld(self, *data):
+		for i in range(len(data)):
+			word = data[i]
+			for c in word:
+				if self.writeToStdout:
+					sys.stdout.write(decode(c))
+					continue
+				if c != 0x13:
+					self.timeoutWait()
+					super(Adafruit_Thermal, self).write(c)           
+					d = self.byteTime
+					if self.column == self.maxColumn and len(word) > self.maxColumn:
+						super(Adafruit_Thermal, self).write(encode('\n'))
+						self.column = 0
+						# Feed line (blank)
+						if self.prevByte == '\n':
+							d += ((self.charHeight +
+								   self.lineSpacing) *
+								   self.dotFeedTime)
 						else:
-							self.column += 1
+							# Text line
+							d += ((self.charHeight *
+								   self.dotPrintTime) +
+								  (self.lineSpacing *
+								   self.dotFeedTime))
+						
+					if c == b'\n':
+						self.column = 0
+					else:
+						self.column += 1
 									
-						self.timeoutSet(d)
-						self.prevByte = c
+					self.timeoutSet(d)
+					self.prevByte = c
 
 	# Override write() method to keep track of paper feed.
 	def write(self, *data):
 		for i in range(len(data)):
 			c = data[i]
 			if self.writeToStdout:
-				sys.stdout.write(c)
+				sys.stdout.write(decode(c))
 				continue
 			if c != 0x13:
 				self.timeoutWait()
@@ -764,24 +764,24 @@ class Adafruit_Thermal(Serial):
 	# but these are here to provide more direct compatibility
 	# with existing code written for the Arduino library.
 	def print(self, *args, **kwargs):
-		for arg in args:
-			self.write(encode(arg))
-		return
 		break_long_words = self.wordWrap
 		subsequent_indent = ''
 		if self.tabWrap:
 			subsequent_indent = '\t'
-		import pdb; pdb.set_trace()        
 		wrap = textwrap.TextWrapper(break_long_words=break_long_words,
 					    width=self.maxColumn,
 					    subsequent_indent=subsequent_indent)
 		for arg in args:
-			lines = wrap.wrap(arg)
-			if len(lines) >= 1:
-				self.write(encode(lines[0]))
-			for i in range(1, len(lines)):
-				self.write(encode('\n'))
-				self.write(encode(lines[i]))
+			lines = arg.splitlines()
+			for line in lines:
+				wrap_lines = wrap.wrap(line)
+				if len(wrap_lines) < 1:
+					self.write(encode('\n'))
+				elif len(wrap_lines) >= 1:
+					self.write(encode(wrap_lines[0]))
+				for i in range(1, len(wrap_lines)):
+					self.write(encode('\n'))
+					self.write(encode(wrap_lines[i]))
 
 	# For Arduino code compatibility again
 	def println(self, *args, **kwargs):
@@ -804,3 +804,8 @@ def encode(arg):
 	if not isinstance(arg, str):
 		arg = str(arg)
 	return arg.encode('cp437', 'ignore')
+
+def decode(arg):
+	if not isinstance(arg, bytes):
+		arg = bytes([arg])
+	return arg.decode('cp437', 'ignore')
