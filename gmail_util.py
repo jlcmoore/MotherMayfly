@@ -109,10 +109,13 @@ def parse_message(mssg, gmail):
 
     # Fetching message body
     body = payload['body']
+
     if not body or 'data' not in body:
         parts = payload['parts']
         if parts and 'body' in parts[0]:
             body = parts[0]['body']
+        elif 'parts' in parts and 'body' in parts['parts'][0]:
+            body = parts['parts'][0]['body']
         else:
             return None
     if 'data' not in body:
